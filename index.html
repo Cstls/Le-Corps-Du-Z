@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Corps Du Z</title>
+<meta name="description" content="Trajet du produit de contraste iodé au scanner, en 3D.">
+<meta name="theme-color" content="#03070d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Le Corps Du Z">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>html{box-sizing:border-box;color-scheme:dark;background:#03070d;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout : hologramme plein cadre, instruments posés dessus. Téléphone : scène + console repliable en bas. Grand écran : scène + console latérale. */
+:root{
+  color-scheme:dark;
+  --bg:#03070d;
+  --glass:rgba(7,15,27,.78);
+  --glass-2:rgba(16,32,52,.62);
+  --line:rgba(98,206,255,.24);
+  --line-2:rgba(98,206,255,.5);
+  --grid:rgba(120,190,255,.09);
+  --fg:#e4f2ff;
+  --muted:#7d98b3;
+  --cy:#5fe0ff;
+  --iode:#ffd166;
+  --art:#ff5f7e;
+  --vein:#5b93ff;
+  --port:#bd8fff;
+  --ok:#7fe3a8;
+  --ink:#03121c;
+  --font-display:"Chakra Petch","Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --gl:max(16px, env(safe-area-inset-left, 0px));
+  --gr:max(16px, env(safe-area-inset-right, 0px));
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.4;overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column;min-height:0}
+
+/* ---------- Scène ---------- */
+.stage{position:relative;flex:1 1 auto;min-height:260px;overflow:hidden;
+  background:radial-gradient(110% 75% at 50% 38%,#0c2038 0%,#06101d 52%,#02050a 100%)}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/100% 44px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/44px 100%;
+  -webkit-mask-image:radial-gradient(90% 70% at 50% 45%,#000 0%,transparent 100%);mask-image:radial-gradient(90% 70% at 50% 45%,#000 0%,transparent 100%)}
+.stage::after{content:"";position:absolute;inset:8px;pointer-events:none;
+  background:
+   linear-gradient(var(--line-2),var(--line-2)) top left/16px 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) top left/1px 16px no-repeat,
+   linear-gradient(var(--line-2),var(--line-2)) top right/16px 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) top right/1px 16px no-repeat,
+   linear-gradient(var(--line-2),var(--line-2)) bottom left/16px 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) bottom left/1px 16px no-repeat,
+   linear-gradient(var(--line-2),var(--line-2)) bottom right/16px 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) bottom right/1px 16px no-repeat}
+.stage canvas{position:relative;display:block;width:100%;height:100%;touch-action:none;outline:none}
+.hud{position:absolute;z-index:3;top:14px;left:var(--gl);right:var(--gr);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}
+.hud>*{pointer-events:auto}
+.brand{min-width:0}
+h1{font-family:var(--font-display);font-size:11.5px;font-weight:700;margin:0;letter-spacing:.12em;white-space:nowrap;text-transform:uppercase;color:var(--cy);display:flex;align-items:center;gap:8px}
+h1::before{content:"";width:9px;height:9px;border:1.5px solid var(--cy);border-radius:50%;box-shadow:0 0 10px var(--cy);flex:none}
+.sub{display:none;margin:3px 0 0;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.readout{margin-top:14px;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+#clock{font-family:var(--font-mono);font-size:34px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg);text-shadow:0 0 18px rgba(95,224,255,.45)}
+#phase{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--iode);background:rgba(255,209,102,.09);border:1px solid rgba(255,209,102,.32);border-radius:3px;padding:3px 8px;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:6px;align-items:flex-start;flex:none}
+.views{position:relative;display:flex;flex-direction:column;align-items:flex-end}
+.menu{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:5px;min-width:168px;background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:8px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.menu .b{width:100%;text-align:left;justify-content:flex-start}
+#menuB{padding-inline:9px;font-size:11px}
+#menuB::after{content:"";display:inline-block;margin-left:8px;border:4px solid transparent;border-top-color:currentColor;transform:translateY(2px)}
+.astP{position:absolute;z-index:4;top:56px;right:var(--gr);max-width:min(300px,calc(100vw - 32px));background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.hint{position:absolute;z-index:3;bottom:14px;left:var(--gl);right:var(--gr);margin:0;color:var(--cy);font-family:var(--font-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;text-align:center}
+.card{position:absolute;z-index:4;left:var(--gl);right:var(--gr);bottom:12px;max-width:440px;background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:11px 13px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.card h2{font-family:var(--font-display);font-size:15px;font-weight:600;margin:0 30px 2px 0;letter-spacing:.02em}
+.card .cat{margin:0 0 5px;font-family:var(--font-display);font-size:10.5px;color:var(--cy);text-transform:uppercase;letter-spacing:.14em}
+.card p{margin:0;font-size:13px;color:var(--fg)}
+.card .now{margin-top:7px;color:var(--iode);font-family:var(--font-mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+.card .x{position:absolute;top:4px;right:4px;width:32px;height:32px;border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;border-radius:6px}
+
+/* ---------- Coupe axiale ---------- */
+.ax{position:absolute;z-index:3;left:var(--gl);bottom:12px;width:min(46vw,210px);display:flex;flex-direction:column;gap:5px;padding:7px;background:var(--glass);border:1px solid var(--line);border-radius:8px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.ax.big{width:min(calc(100% - 32px),62vh,560px)}
+.axh{display:flex;align-items:center;justify-content:space-between;gap:6px;font-family:var(--font-display);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--cy);min-width:0}
+.axh span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axh .b.ico{width:26px;height:26px;flex:none}
+#axC{display:block;width:100%;aspect-ratio:1/1;background:#000;border-radius:50%;touch-action:none}
+.app.full .ax{bottom:8px}
+@media (min-width:900px){.ax{width:300px}}
+
+/* ---------- Commandes ---------- */
+button.b{font:600 12px var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--fg);background:var(--glass-2);border:1px solid var(--line);border-radius:5px;padding:7px 11px;min-height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,border-color .15s,box-shadow .15s,color .15s;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+button.b:hover{border-color:var(--line-2)}
+button.b[aria-pressed="true"]{background:rgba(95,224,255,.16);border-color:var(--cy);color:var(--cy);box-shadow:0 0 14px rgba(95,224,255,.25),inset 0 0 10px rgba(95,224,255,.12)}
+button.b.primary{min-width:86px;background:var(--cy);border-color:var(--cy);color:var(--ink);box-shadow:0 0 18px rgba(95,224,255,.4)}
+button.b.ico,button.b.ast{width:34px;height:34px;min-height:0;padding:0}
+button.b.ast{font-size:16px;color:var(--muted)}
+.seg{display:flex}
+.seg .b{border-radius:0;border-left-width:0;padding-inline:10px;font-family:var(--font-mono);letter-spacing:0}
+.seg .b:first-child{border-radius:5px 0 0 5px;border-left-width:1px}
+.seg .b:last-child{border-radius:0 5px 5px 0}
+select{font:500 13px var(--font-body);color:var(--fg);background:var(--glass-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235fe0ff' stroke-width='1.5'/%3E%3C/svg%3E") right 10px center no-repeat;border:1px solid var(--line);border-radius:5px;padding:7px 28px 7px 10px;min-height:34px;-webkit-appearance:none;appearance:none}
+select option{background:#0a1626;color:var(--fg)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;margin:2px 0 0;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--line-2),var(--line))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5.5px;border-radius:50%;background:var(--bg);border:2px solid var(--cy);box-shadow:0 0 10px rgba(95,224,255,.7)}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--cy);box-shadow:0 0 10px rgba(95,224,255,.7)}
+:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+
+/* ---------- Console ---------- */
+.panel{position:relative;z-index:5;flex:none;display:flex;flex-direction:column;gap:8px;padding-block:10px 12px;padding-left:var(--gl);padding-right:var(--gr);background:linear-gradient(180deg,rgba(8,17,30,.94),rgba(4,9,17,.98));border-top:1px solid var(--line);box-shadow:0 -1px 24px rgba(95,224,255,.10);max-height:72%;overflow-y:auto;overscroll-behavior:contain}
+.acq,.verd{margin:0;font-size:12.5px;color:var(--iode)}
+#chart{display:block;width:100%;height:92px;flex:none;touch-action:none;cursor:ew-resize;border-radius:4px}
+.legend{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:11px;color:var(--muted);letter-spacing:.02em}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;vertical-align:middle;margin-right:6px;box-shadow:0 0 8px currentColor}
+.legend .lv{color:var(--vein)}.legend .la{color:var(--art)}.legend .lp{color:var(--port)}
+.legend .lv span,.legend .la span,.legend .lp span{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sp{flex:1 1 0}
+.sheet{display:none;flex-direction:column;gap:9px;padding-top:4px}
+.panel.open .sheet{display:flex}
+.site{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.site label,.params label{font-family:var(--font-display);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.site label{flex:0 0 78px}
+.site select{flex:1 1 130px;min-width:0}
+.params{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px}
+.params label{display:block;min-width:0}
+.params output{display:block;margin-top:2px;color:var(--fg);font-family:var(--font-mono);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.note{margin:0;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.app.full .panel>*:not(.row){display:none}
+.app.full .panel{padding-block:8px}
+.app.full .sub{display:none}
+
+@media (min-width:900px){
+  .app{flex-direction:row}
+  .panel{width:392px;max-height:none;height:100%;border-top:0;border-left:1px solid var(--line);box-shadow:-1px 0 24px rgba(95,224,255,.08);padding-block:18px;gap:12px}
+  .sheet{display:flex;padding-top:8px}
+  #sheetB{display:none}
+  #chart{height:150px}
+  #clock{font-size:44px}
+  h1{font-size:13px;letter-spacing:.2em}
+  #menuB{padding-inline:11px;font-size:12px}
+  .sub{display:block}
+  .app.full .panel{display:none}
+}
+/* Téléphone à l'horizontale : modèle à gauche, commandes à droite */
+@media (orientation:landscape) and (max-height:560px){
+  .app{flex-direction:row}
+  .stage{min-height:0}
+  .panel{width:min(44%,340px);max-height:none;height:100%;border-top:0;border-left:1px solid var(--line);box-shadow:-1px 0 24px rgba(95,224,255,.08);padding-block:10px;gap:8px}
+  .sheet{display:flex;padding-top:2px}
+  #sheetB{display:none}
+  #chart{height:76px}
+  #clock{font-size:28px}
+  h1{font-size:11.5px;letter-spacing:.12em}
+  .sub{display:none}
+  .readout{margin-top:8px}
+  .ax{width:150px}
+  .ax.big{width:min(calc(100% - 32px),calc(100vh - 96px))}
+  .site label{flex-basis:68px}
+  .app.full .panel{display:none}
+}
+@media (prefers-reduced-motion:reduce){button.b{transition:none}}
+</style>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <div class="hud">
+      <div class="brand">
+        <h1>Le Corps Du Z</h1>
+        <p class="sub">Trajet du produit de contraste iodé</p>
+        <div class="readout"><span id="clock">0 s</span><span id="phase">Veines du bras</span></div>
+      </div>
+      <div class="tools">
+        <button class="b ico" id="full" type="button" aria-label="Plein écran"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path id="fullP" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+        <button class="b ast" id="astB" type="button" aria-label="Mentions et crédits" aria-expanded="false" aria-controls="astP">*</button>
+        <div class="views">
+          <button class="b" id="menuB" type="button" aria-expanded="false" aria-controls="menu">Affichage</button>
+          <div class="menu" id="menu" hidden>
+          <button class="b" id="view" type="button">Corps entier</button>
+          <button class="b" id="skin" type="button" aria-pressed="true">Peau</button>
+          <button class="b" id="org" type="button" aria-pressed="true">Organes</button>
+          <button class="b" id="ves" type="button" aria-pressed="true">Vaisseaux</button>
+          <button class="b" id="heart" type="button" aria-pressed="false">Cœur</button>
+          <button class="b" id="lung" type="button" aria-pressed="false">Poumons</button>
+          <button class="b" id="axB" type="button" aria-pressed="false">Coupe axiale</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="astP" id="astP" hidden>Modèle pédagogique bâti sur des délais usuels, pas une simulation pharmacocinétique. Anatomie : Z-Anatomy, licence CC BY-SA 4.0. Conception : Zyyan Ahamada.</div>
+    <div class="ax" id="ax" hidden>
+      <div class="axh"><span id="axL">Coupe axiale</span><button class="b ico" id="axBig" type="button" aria-label="Agrandir ou réduire la coupe" aria-pressed="false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"></path></svg></button></div>
+      <canvas id="axC" role="img" aria-label="Coupe axiale schématique au niveau choisi"></canvas>
+      <input type="range" id="axY" min="0.06" max="1.74" step="0.004" value="0.54" aria-label="Niveau de coupe, de la tête aux pieds">
+    </div>
+    <p class="hint" id="hint">Chargement du modèle anatomique…</p>
+    <div class="card" id="info" hidden>
+      <button class="x" id="infoX" type="button" aria-label="Fermer">×</button>
+      <h2 id="infoT"></h2>
+      <p class="cat" id="infoC"></p>
+      <p id="infoP"></p>
+      <p class="now" id="infoN"></p>
+    </div>
+  </div>
+
+  <section class="panel" id="panel">
+    <p class="acq" id="acq" hidden></p>
+    <canvas id="chart" tabindex="0" role="slider" aria-label="Temps depuis le début de l'injection, en secondes" aria-valuemin="0" aria-valuemax="300" aria-valuenow="0"></canvas>
+    <div class="legend">
+      <span class="lv"><i style="background:var(--vein)"></i><span id="lg0">Artère pulmonaire</span></span>
+      <span class="la"><i style="background:var(--art)"></i><span id="lg1">Aorte</span></span>
+      <span class="lp"><i style="background:var(--port)"></i><span id="lg2">Foie</span></span>
+    </div>
+    <div class="row">
+      <button class="b primary" id="play" type="button">Lecture</button>
+      <button class="b ico" id="restart" type="button" aria-label="Rejouer depuis le début"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path></svg></button>
+      <div class="seg" role="group" aria-label="Vitesse de lecture">
+        <button class="b" type="button" data-s="1" aria-pressed="false">×1</button>
+        <button class="b" type="button" data-s="3" aria-pressed="true">×3</button>
+        <button class="b" type="button" data-s="10" aria-pressed="false">×10</button>
+      </div>
+      <span class="sp"></span>
+      <button class="b" id="sheetB" type="button" aria-expanded="false" aria-controls="sheet">Réglages</button>
+    </div>
+    <div class="sheet" id="sheet">
+      <div class="site"><label for="site">Injection</label><select id="site"></select><button class="b" id="pickV" type="button" aria-pressed="false">Choisir la veine</button></div>
+      <div class="site"><label for="proto">Protocole</label><select id="proto"></select><button class="b" id="goAcq" type="button" hidden>Aller à l'acquisition</button></div>
+      <div class="site" id="clotRow" hidden><label for="clot">Occlusion</label><select id="clot"></select></div>
+      <div class="params">
+        <div><label for="q">Débit<output id="qv">3,0 mL/s</output></label><input type="range" id="q" min="1" max="6" step="0.5" value="3"></div>
+        <div><label for="v">Volume<output id="vv">90 mL</output></label><input type="range" id="v" min="40" max="150" step="5" value="90"></div>
+        <div><label for="co">Débit card.<output id="cov">5,0 L/min</output></label><input type="range" id="co" min="2" max="9" step="0.5" value="5"></div>
+      </div>
+      <div class="site"><button class="b" id="spl" type="button" aria-pressed="false">Split bolus</button><select id="splP" aria-label="Préréglage du split bolus" hidden><option value="">Préréglage…</option><option value="orl">ORL biphasique</option><option value="uro">Uroscanner split</option></select></div>
+      <div class="params" id="splG" hidden>
+        <div><label for="q2">Débit 2<output id="q2v">3,0 mL/s</output></label><input type="range" id="q2" min="1" max="6" step="0.5" value="3"></div>
+        <div><label for="v2">Volume 2<output id="v2v">50 mL</output></label><input type="range" id="v2" min="20" max="120" step="5" value="50"></div>
+        <div><label for="t2">Départ 2<output id="t2v">90 s</output></label><input type="range" id="t2" min="20" max="900" step="5" value="90"></div>
+      </div>
+      <p class="note" id="dur">Durée d'injection : 30 s</p>
+    </div>
+  </section>
+</div>
+
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var stage=$('stage');
+if(!window.THREE){ $('hint').textContent="La 3D n'a pas pu se charger. Recharge la page."; return; }
+
+/* ---------- Modèle de rehaussement ---------- */
+var P={Q:3,V:90,CO:5};
+var TMAX=300;
+function erf(x){var s=x<0?-1:1;x=Math.abs(x);var t=1/(1+0.3275911*x);
+  var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+function sg(x){return 1/(1+Math.exp(-x));}
+function kk(){return 5/P.CO;}
+function dur(){return P.V/P.Q;}
+/* SITE.P : durée du trajet veineux périphérique ; SITE.SH : décalage de tout l'aval selon le point d'injection */
+var SITE={P:4.6,SH:0,ph:'Veines du bras',label:''};
+function raw(d){var k=kk(),af=Math.pow(3/P.Q,0.4);return d<=SITE.P? d*af*k : (SITE.P*af+(d-SITE.P))*k;}
+function delay(d){return raw(d+SITE.SH);}
+/* Split bolus : seconde injection, superposée à la première avec son propre débit et volume */
+var SPL={on:false,Q:3,V:50,t0:90,acq:null};
+function as2(fn,t){var q=P.Q,v=P.V;P.Q=SPL.Q;P.V=SPL.V;var r=fn(t);P.Q=q;P.V=v;return r;}
+function EV(fn,t){return fn(t)+((SPL.on&&t>SPL.t0)?as2(fn,t-SPL.t0):0);}
+function tmaxN(){return SPL.on?Math.max(300,Math.ceil((SPL.t0+SPL.V/SPL.Q+160)/10)*10):300;}
+function amp(){return Math.min(1.5,(P.Q/3)*Math.pow(kk(),0.7));}
+function pass(t,d,sig){var s=sig*1.414;return 0.5*(erf((t-d)/s)-erf((t-d-dur())/s));}
+function rec(t,d){return 0.2*(P.V/90)*sg((t-d-dur()/2-25*kk())/10)*Math.exp(-Math.max(0,t-90)/450);}
+function ves(t,d,sig,a,undil){
+  var A=undil?Math.min(1.5,P.Q/3*1.3):amp()*a, dd=delay(d);
+  return A*pass(t,dd,sig*kk())+rec(t,dd);
+}
+function exc(t,d){return 0.95*Math.min(1.2,P.V/90)*sg((t-delay(d))/22);}
+function liver(t){return 0.2*amp()*pass(t,delay(23),6*kk())+ves(t,54,15,0.8);}
+function kidney(t){return Math.max(0.85*ves(t,21.5,4,1),ves(t,58,18,0.95));}
+/* même calcul que le shader des vaisseaux, pour l'affichage chiffré */
+function vesAttr(t,a,o){
+  if(a[o+2]<0)return 0;
+  var K=a[o+6];
+  if(K>2.5&&K<3.5)return exc(t,a[o]);
+  var k=kk(),d1=K>9.5?raw(a[o]):delay(a[o]),a1=K>9.5?Math.min(1.5,P.Q/3*1.3):amp()*a[o+2];
+  var e=a1*pass(t,d1,a[o+1]*k);
+  if(a[o+5]>0)e+=amp()*a[o+5]*pass(t,delay(a[o+3]),a[o+4]*k);
+  return e+rec(t,d1);
+}
+var FN={
+  lung:function(t){return 0.35*ves(t,11.5,2.5,1);},
+  ra:function(t){return ves(t,6.5,1.5,1.1);},rv:function(t){return ves(t,7.5,1.8,1.1);},
+  pt:function(t){return ves(t,8.6,1.8,1.1);},
+  la:function(t){return ves(t,14.5,3,1.05);},lv:function(t){return ves(t,15.5,3.2,1.05);},
+  liver:liver,kidney:kidney,
+  spleen:function(t){return 0.9*ves(t,23,6,1);},
+  panc:function(t){return 0.9*ves(t,26,7,1);},
+  gut:function(t){return 0.6*ves(t,25,7,1);},
+  brain:function(t){return 0.45*ves(t,21,5,1);},
+  exc0:function(t){return exc(t,160);},exc1:function(t){return exc(t,185);}
+};
+function paF(t){return ves(t,10,2,1.1);}
+function aortaF(t){return ves(t,18.5,3.5,1);}
+function portF(t){return ves(t,50,11,0.8);}
+function urF(t){return exc(t,185);}
+/* Courbe lue directement sur les vaisseaux du modèle (moyenne des segments nommés), avec repli avant chargement */
+function mkV(names,fb){var idx=null;
+  return function(t){
+    if(!CURVES)return fb(t);
+    if(!idx){idx=[];CURVES.forEach(function(c,i){if(names.indexOf(c.e)>=0)idx.push((c.s+(c.c>>1))*7);});}
+    if(!idx.length)return fb(t);
+    var s=0;for(var i=0;i<idx.length;i++)s+=vesAttr(t,VATT,idx[i]);return s/idx.length;};
+}
+var carF=mkV(['Internal carotid artery.r','Internal carotid artery.l'],function(t){return ves(t,19,3.6,1);});
+var jugF=mkV(['Internal jugular vein.r','Internal jugular vein.l'],function(t){return 0.6*ves(t,27,6,1);});
+var archF=mkV(['Aortic arch'],function(t){return ves(t,16.5,3.4,1);});
+var pvF=mkV(['Right superior pulmonary vein','Right inferior pulmonary vein','Left superior pulmonary vein','Left inferior pulmonary vein'],function(t){return ves(t,13,2.6,1.05);});
+/* Protocoles : courbe cible, seuil de la fenêtre, structures mises en avant, courbes affichées */
+var PROTO=[
+ {label:'Exploration libre'},
+ {label:'Angioscanner des TSA',f:carF,thr:0.9,org:{},ves:{tsa:1,acerv:1,aorte:1,jug:1,vtete:1},
+  cur:[['Crosse aortique',archF],['Carotides',carF],['Jugulaires',jugF]]},
+ {label:'Angioscanner pulmonaire',f:paF,thr:0.9,org:{pt:1,rv:1,lungR:1,lungL:1},ves:{ap:1},
+  cur:[['Artère pulmonaire',paF],['Aorte',aortaF],['Ventricule droit',FN.rv]]},
+ {label:'Angioscanner aortique',f:aortaF,thr:0.9,org:{lv:1},artOnly:true,
+  ves:{aorte:1,artm:1,tsa:1,atronc:1,acoel:1,coro:1,acerv:1,rate:1,intestin:1,reins:1},
+  cur:[['Artère pulmonaire',paF],['Aorte',aortaF],['Foie',liver]]},
+ {label:'TAP, phase portale',f:liver,thr:0.92,org:{liver:1,spleen:1,pancreas:1,kidR:1,kidL:1},ves:{porte:1,vsh:1,acoel:1},
+  cur:[['Veine porte',portF],['Aorte',aortaF],['Foie',liver]]},
+ {label:'Uroscanner, phase excrétoire',f:urF,thr:0.8,open:true,org:{kidR:1,kidL:1,pelvR:1,pelvL:1,bladder:1},ves:{urine:1,reins:1},
+  cur:[['Rein',kidney],['Aorte',aortaF],['Voies urinaires',urF]]}
+];
+var PR=null,WIN=null;
+function phase(t){
+  var T=dur();
+  if(t<raw(SITE.P))return SITE.ph;
+  if(t<delay(8))return 'Arrivée au cœur droit';
+  if(t<delay(12.5))return 'Artères pulmonaires';
+  if(t<delay(16))return 'Retour au cœur gauche';
+  if(t<delay(45)+Math.max(0,(T-30)/2))return 'Phase artérielle';
+  if(t<delay(54)+T/2+25*kk())return 'Phase portale';
+  if(t<delay(175))return 'Équilibre';
+  return 'Phase tardive, excrétion urinaire';
+}
+
+/* ---------- Textes ---------- */
+var INFO={
+ inj:['Point d\'injection',"Le produit entre ici, pur, au débit réglé sur l'injecteur. Plus le débit est élevé, plus le pic artériel monte haut."],
+ bras:['Trajet veineux du produit pur',"Produit encore non dilué entre le point d'injection et le cœur droit. Le transit dépend de la distance : 2 à 3 s depuis une voie centrale, environ 6 s depuis le pli du coude, une dizaine depuis le poignet."],
+ vcs:['Veine cave supérieure',"Contraste très dense pendant toute l'injection. C'est lui qui donne les artefacts en stries dans le médiastin supérieur."],
+ cd:['Cœur droit',"Arrivée vers 6 à 8 s. Le produit s'y mélange au sang non opacifié qui remonte par la veine cave inférieure."],
+ ap:['Artères pulmonaires',"Opacifiées vers 8 à 12 s. C'est la fenêtre de l'angioscanner pulmonaire, avant que le cœur gauche et l'aorte se chargent."],
+ poumons:['Poumons',"Le lit capillaire pulmonaire est traversé en 3 à 4 s. Le bolus s'y étale un peu avant de revenir au cœur gauche."],
+ vp:['Veines pulmonaires',"Elles ramènent le sang opacifié des poumons vers l'oreillette gauche, vers 12 à 14 s."],
+ cg:['Cœur gauche',"Atteint vers 13 à 16 s. À partir d'ici le produit part dans toute la circulation systémique."],
+ aorte:['Aorte',"Début de rehaussement vers 15 à 20 s, pic en fin d'injection. C'est le repère du bolus tracking pour déclencher la phase artérielle."],
+ coro:['Artères coronaires',"Elles naissent à la racine de l'aorte et se remplissent avec elle, vers 16 à 20 s. Le coroscanner vise le pic aortique."],
+ tsa:['Troncs supra-aortiques',"Ils se remplissent juste après la crosse. Le transit cérébral est court, environ 8 à 10 s entre artères et veines."],
+ acerv:['Artères de la tête et du cerveau',"Opacifiées 3 à 5 s après la crosse de l'aorte. L'angioscanner des troncs supra-aortiques se déclenche sur le pic aortique."],
+ cerveau:['Encéphale',"Le parenchyme se rehausse peu. Le sang ressort par les sinus veineux et les jugulaires moins de 10 s après son arrivée."],
+ jug:['Veines jugulaires',"Retour veineux de la tête, opacifié tôt, vers 25 à 30 s."],
+ vtete:['Veines et sinus de la tête',"Le transit cérébral est court : sinus duraux et veines de la tête s'opacifient vers 25 à 30 s. C'est la base du temps veineux cérébral."],
+ artm:['Artères des membres',"Les artères distales se remplissent plus tard : compter 25 à 35 s pour les jambes, davantage en cas d'artériopathie."],
+ atronc:['Artères du tronc',"Branches pariétales et viscérales de l'aorte, opacifiées dans les secondes qui suivent son passage."],
+ acoel:['Tronc cœliaque et artère hépatique',"Branches digestives hautes de l'aorte, rehaussées dès la phase artérielle. L'artère hépatique apporte environ un quart du sang du foie."],
+ reins:['Reins',"Cortex rehaussé dès 30 à 40 s, parenchyme homogène à la phase néphrographique vers 90 à 100 s, puis excrétion dans les cavités après 3 min."],
+ foie:['Foie',"Double apport : environ 25 % par l'artère hépatique et 75 % par la veine porte. Le pic du parenchyme arrive donc tard, vers 70 à 80 s."],
+ rate:['Rate',"Rehaussement précoce et hétérogène, d'aspect tigré, à la phase artérielle. Elle devient homogène à la phase portale."],
+ pancreas:['Pancréas',"Rehaussement maximal vers 35 à 45 s. C'est la phase pancréatique, entre l'artérielle et la portale."],
+ intestin:['Tube digestif',"Le sang qui traverse l'intestin et la rate ressort par la veine porte. C'est ce détour qui retarde le rehaussement du foie."],
+ porte:['Système porte',"Veine splénique et veines mésentériques se rejoignent pour former la veine porte, rehaussée vers 45 à 60 s."],
+ vsh:['Veines hépatiques',"Opacifiées après le parenchyme hépatique, vers 60 à 80 s."],
+ vci:['Veine cave inférieure',"Au-dessus des veines rénales elle se rehausse tôt, car le retour rénal est rapide. Le sang des jambes arrive bien plus tard, d'où les faux aspects de thrombus par flux mélangés."],
+ vcoeur:['Veines du cœur',"Elles drainent le myocarde vers le sinus coronaire, quelques secondes après les artères coronaires."],
+ vtronc:['Veines du tronc',"Retour veineux des parois et des viscères, dilué et étalé. Il arrive après la phase artérielle, entre 35 et 70 s selon le territoire."],
+ vbras:['Veines du bras, retour',"Retour veineux des membres supérieurs, tardif et dilué. Du côté de l'injection, seul le trajet au-dessus du cathéter reçoit le produit pur."],
+ vjambes:['Veines des jambes',"Retour veineux tardif, vers 2 à 3 min. C'est le délai d'un temps veineux des membres inférieurs."],
+ urine:['Voies urinaires',"Phase excrétoire : le produit filtré par les reins arrive dans les cavités, les uretères puis la vessie à partir de 3 à 5 min."]
+};
+
+/* ---------- Scène ---------- */
+var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.setClearColor(0x000000,0);
+stage.insertBefore(renderer.domElement,stage.firstChild);
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(40,1,0.02,30);
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.1;controls.minDistance=0.15;controls.maxDistance=6;
+scene.add(new THREE.AmbientLight(0xffffff,0.75));
+var dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(1,2,3);scene.add(dl);
+
+var HOT=new THREE.Color(0xffe2a0);
+var UT={value:0},UREV={value:10};
+/* Teintes des organes en version hologramme */
+var OCOL={lungR:0x3fa9d6,lungL:0x3fa9d6,ra:0x3f74ea,rv:0x3f74ea,pt:0x3f74ea,la:0xe2466a,lv:0xe2466a,liver:0xc0573c,spleen:0xa9477f,pancreas:0xcfa446,
+  kidR:0xcf6d42,kidL:0xcf6d42,pelvR:0x6c8fb0,pelvL:0x6c8fb0,bladder:0x6c8fb0,stomach:0x5f9c95,duodenum:0x5f9c95,colon:0x5f9c95,jejunum:0x5f9c95,brain:0x8e9be0};
+var GVS='varying vec3 vN;varying vec3 vV;varying vec3 vP;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vP=position;gl_Position=projectionMatrix*mv;}';
+function organMat(col,op){
+  return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.FrontSide,
+    uniforms:{uCol:{value:new THREE.Color(col)},uHot:{value:HOT},uE:{value:0},uOp:{value:op},uDm:{value:1},uRev:UREV},
+    vertexShader:GVS,
+    fragmentShader:['uniform vec3 uCol,uHot;uniform float uE,uOp,uDm,uRev;varying vec3 vN;varying vec3 vV;varying vec3 vP;',
+     'void main(){',
+     ' if(vP.y>uRev)discard;',
+     ' float ndv=abs(dot(normalize(vN),normalize(vV)));float f=pow(1.0-ndv,2.2);',
+     ' vec3 c=uCol*(0.30+0.55*ndv)+uCol*f*1.1;',
+     ' c=mix(c,uHot*(0.60+0.40*ndv)+vec3(1.0)*f*0.3,uE*0.8);',
+     ' float a=uOp*0.55+f*0.45+uE*0.22;',
+     ' c*=mix(0.45,1.0,uDm);a*=mix(0.5,1.0,uDm);',
+     ' c+=vec3(0.3,0.9,1.0)*exp(-pow((uRev-vP.y)/0.012,2.0));',
+     ' gl_FragColor=vec4(c,clamp(a,0.0,0.94));',
+     '}'].join('\n')});
+}
+var organs=[],organGroup=new THREE.Group(),skinMesh=null,vesMesh=null,vesMat=null,haloMesh=null,hub=null,hubRing=null;
+var pickOrgans=[],VC=null,CURVES=null,VATT=null,BASE=null,PTS=null,PAR=null,PVB=null,PSD=null,cath=null,hubPick=null,PRESET=[];
+scene.add(organGroup);
+
+var skinMat=new THREE.ShaderMaterial({
+  transparent:true,depthWrite:false,side:THREE.FrontSide,blending:THREE.AdditiveBlending,
+  uniforms:{uCol:{value:new THREE.Color(0x58d6ff)},uTime:UT,uRev:UREV},
+  vertexShader:GVS,
+  fragmentShader:['uniform vec3 uCol;uniform float uTime,uRev;varying vec3 vN;varying vec3 vV;varying vec3 vP;',
+   'void main(){',
+   ' if(vP.y>uRev)discard;',
+   ' float f=pow(1.0-abs(dot(normalize(vN),normalize(vV))),2.6);',
+   ' float edge=exp(-pow((uRev-vP.y)/0.014,2.0));',
+   ' float a=0.016+0.38*f+edge*0.85;',
+   ' gl_FragColor=vec4(uCol,a);',
+   '}'].join('\n')
+});
+
+var VS=[
+'uniform float uT,uQ,uV,uCO,uSel,uP,uSh,uDim,uInfl;',
+'attribute vec3 aA;attribute vec3 aB;attribute float aK;attribute float aC;attribute float aT;attribute float aH;attribute float aR;',
+'varying float vE;varying vec3 vN;varying float vK;varying float vS;varying vec3 vP;varying float vD;varying float vH;varying float vPh;varying vec3 vV;',
+'uniform float uS2,uT2,uQ2,uV2;',
+'float kk_;float dur_;float T_;float Q_;float V_;',
+'float erf_(float x){float s=sign(x);x=abs(x);float t=1.0/(1.0+0.3275911*x);',
+' float y=1.0-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*exp(-x*x);return s*y;}',
+'float sg_(float x){return 1.0/(1.0+exp(-clamp(x,-30.0,30.0)));}',
+'float dly(float d){float af=pow(3.0/Q_,0.4);return d<=uP?d*af*kk_:(uP*af+(d-uP))*kk_;}',
+'float pass_(float d,float sig){float s=sig*1.414;return 0.5*(erf_((T_-d)/s)-erf_((T_-d-dur_)/s));}',
+'float enh(){',
+' if(aA.z<0.0)return 0.0;',
+' dur_=V_/Q_;float amp=min(1.5,(Q_/3.0)*pow(kk_,0.7));float e;',
+' if(aK>2.5&&aK<3.5){e=0.95*min(1.2,V_/90.0)*sg_((T_-dly(aA.x+uSh))/22.0);}',
+' else{',
+'  float d1=aK>9.5?dly(aA.x):dly(aA.x+uSh);float a1=aK>9.5?min(1.5,Q_/3.0*1.3):amp*aA.z;',
+'  e=a1*pass_(d1,aA.y*kk_);',
+'  if(aB.z>0.0)e+=amp*aB.z*pass_(dly(aB.x+uSh),aB.y*kk_);',
+'  e+=0.2*(V_/90.0)*sg_((T_-d1-dur_/2.0-25.0*kk_)/10.0)*exp(-max(0.0,T_-90.0)/450.0);',
+' }',
+' return e;}',
+'void main(){',
+' kk_=5.0/uCO;T_=uT;Q_=uQ;V_=uV;float e=enh();',
+' if(uS2>0.5&&uT>uT2){T_=uT-uT2;Q_=uQ2;V_=uV2;e+=enh();}',
+' vE=clamp(e,0.0,1.0);vK=aK;vS=abs(aC-uSel)<0.5?1.0:0.0;vD=1.0-uDim*(1.0-aT)*0.7;vH=aH;',
+' vN=normalize(normalMatrix*normal);vP=position;vPh=aA.x;',
+' vec3 pos=position+normal*(uInfl*(0.0012+0.7*aR));vec4 mv=modelViewMatrix*vec4(pos,1.0);vV=normalize(-mv.xyz);',
+' gl_Position=projectionMatrix*mv;',
+'}'].join('\n');
+var FSH0='varying float vE;varying vec3 vN;varying float vK;varying float vS;varying vec3 vP;varying float vD;varying float vH;varying float vPh;varying vec3 vV;';
+var FS=[
+'uniform vec3 uHot,uVein,uArt,uPort,uUr;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowU;',
+FSH0,
+'void main(){',
+' if(vP.y>uRev)discard;',
+' if((vK>2.5&&vK<3.5)?uShowU<0.5:uShowV<0.5)discard;',
+' if(uFoc.w>0.0&&(vH<0.5||distance(vP,uFoc.xyz)>uFoc.w))discard;',
+' vec3 base=(vK<0.5||vK>9.5)?uVein:(vK<1.5?uArt:(vK<2.5?uPort:uUr));',
+' float ndv=abs(dot(normalize(vN),normalize(vV)));float rim=pow(1.0-ndv,1.5);',
+' vec3 c=base*(0.32+0.55*ndv)+base*rim*1.2;',
+' float e=pow(vE,0.8);',
+' float band=0.5+0.5*uWave*sin(6.2831*(vPh*0.85-uTime*1.5));',
+' vec3 hot=mix(uHot,vec3(1.0),0.28*ndv);',
+' c=mix(c,hot*(0.78+0.22*ndv),e*(0.80+0.20*band));',
+' c+=vec3(1.0,0.96,0.85)*(4.0*vE*(1.0-vE))*0.22;',
+' c*=vD;c=mix(c,vec3(1.0),vS*0.6);',
+' c+=vec3(0.3,0.9,1.0)*exp(-pow((uRev-vP.y)/0.012,2.0));',
+' gl_FragColor=vec4(c,1.0);',
+'}'].join('\n');
+/* Halo : même géométrie légèrement gonflée, en additif, proportionnel au rehaussement */
+var FSG=[
+'uniform vec3 uHot;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowU;',
+FSH0,
+'void main(){',
+' if(vP.y>uRev)discard;',
+' if((vK>2.5&&vK<3.5)?uShowU<0.5:uShowV<0.5)discard;',
+' if(uFoc.w>0.0&&(vH<0.5||distance(vP,uFoc.xyz)>uFoc.w))discard;',
+' float ndv=abs(dot(normalize(vN),normalize(vV)));',
+' float band=0.5+0.5*uWave*sin(6.2831*(vPh*0.85-uTime*1.5));',
+' float a=pow(vE,0.9)*pow(ndv,1.8)*(0.20+0.10*band)*vD;',
+' if(a<0.004)discard;',
+' gl_FragColor=vec4(uHot,a);',
+'}'].join('\n');
+
+/* Vue Cœur : coronaires, veines du cœur et départs des gros vaisseaux (pas les branches pulmonaires) */
+var HEARTN={'Ascending aorta':1,'Aortic arch':1,'Bifurcation of pulmonary trunk':1,'Superior vena cava':1,'Inferior vena cava (thoracic part)':1,
+  'Right superior pulmonary vein':1,'Right inferior pulmonary vein':1,'Left superior pulmonary vein':1,'Left inferior pulmonary vein':1};
+function HEARTV(c){return c.k==='coro'||c.k==='vcoeur'||!!HEARTN[c.e];}
+function buildVessels(PT,AT,curves){
+  var n=curves.length,nv=0,ni=0,sides=new Uint8Array(n),ci,i,j;
+  for(ci=0;ci<n;ci++){var c=curves[ci],mr=0;
+    for(i=0;i<c.c;i++){var r=PT[(c.s+i)*4+3];if(r>mr)mr=r;}
+    var s=mr<0.0012?4:(mr<0.004?6:8);sides[ci]=s;nv+=c.c*s;ni+=(c.c-1)*s*6;}
+  var pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),aA=new Float32Array(nv*3),aB=new Float32Array(nv*3),
+      aK=new Float32Array(nv),aC=new Float32Array(nv),aT=new Float32Array(nv).fill(1),aH=new Float32Array(nv),aR=new Float32Array(nv),idx=new Uint32Array(ni);
+  VC=new Uint16Array(nv);PVB=new Uint32Array(PT.length/4);PSD=new Uint8Array(PT.length/4);
+  var vo=0,io=0,t=[0,0,0],nx,ny,nz,bx,by,bz;
+  for(ci=0;ci<n;ci++){
+    c=curves[ci];s=sides[ci];var base=vo;
+    for(i=0;i<c.c;i++){
+      var p=(c.s+i)*4,pa=(c.s+Math.max(0,i-1))*4,pb=(c.s+Math.min(c.c-1,i+1))*4;
+      var tx=PT[pb]-PT[pa],ty=PT[pb+1]-PT[pa+1],tz=PT[pb+2]-PT[pa+2],tl=Math.sqrt(tx*tx+ty*ty+tz*tz)||1;tx/=tl;ty/=tl;tz/=tl;
+      if(i===0){ /* normale de départ : perpendiculaire quelconque */
+        if(Math.abs(ty)<0.9){nx=-tz;ny=0;nz=tx;}else{nx=0;ny=tz;nz=-ty;}
+      }
+      var d=nx*tx+ny*ty+nz*tz;nx-=d*tx;ny-=d*ty;nz-=d*tz;var nl=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;nx/=nl;ny/=nl;nz/=nl;
+      bx=ty*nz-tz*ny;by=tz*nx-tx*nz;bz=tx*ny-ty*nx;
+      var rr=PT[p+3],a=(c.s+i)*7;PVB[c.s+i]=vo;PSD[c.s+i]=s;
+      for(j=0;j<s;j++){
+        var ang=6.2831853*j/s,ca=Math.cos(ang),sa=Math.sin(ang);
+        var dx=ca*nx+sa*bx,dy=ca*ny+sa*by,dz=ca*nz+sa*bz,o=vo*3;
+        pos[o]=PT[p]+rr*dx;pos[o+1]=PT[p+1]+rr*dy;pos[o+2]=PT[p+2]+rr*dz;
+        nor[o]=dx;nor[o+1]=dy;nor[o+2]=dz;
+        aA[o]=AT[a];aA[o+1]=AT[a+1];aA[o+2]=AT[a+2];
+        aB[o]=AT[a+3];aB[o+1]=AT[a+4];aB[o+2]=AT[a+5];
+        aK[vo]=AT[a+6];aC[vo]=ci;aR[vo]=rr;VC[vo]=ci;vo++;
+      }
+    }
+    for(i=0;i<c.c-1;i++)for(j=0;j<s;j++){
+      var v0=base+i*s+j,v1=base+i*s+(j+1)%s,v2=v0+s,v3=v1+s;
+      idx[io++]=v0;idx[io++]=v1;idx[io++]=v2;idx[io++]=v1;idx[io++]=v3;idx[io++]=v2;
+    }
+  }
+  var g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  g.setAttribute('aA',new THREE.BufferAttribute(aA,3));
+  g.setAttribute('aB',new THREE.BufferAttribute(aB,3));
+  g.setAttribute('aK',new THREE.BufferAttribute(aK,1));
+  g.setAttribute('aC',new THREE.BufferAttribute(aC,1));
+  g.setAttribute('aT',new THREE.BufferAttribute(aT,1));
+  g.setAttribute('aH',new THREE.BufferAttribute(aH,1));
+  g.setAttribute('aR',new THREE.BufferAttribute(aR,1));
+  for(var hv=0;hv<nv;hv++)aH[hv]=HEARTV(curves[VC[hv]])?1:0;
+  g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.computeBoundingSphere();g.computeBoundingBox();
+  vesMat=new THREE.ShaderMaterial({side:THREE.DoubleSide,vertexShader:VS,fragmentShader:FS,uniforms:{
+    uFoc:{value:new THREE.Vector4(0,0,0,0)},uS2:{value:0},uT2:{value:90},uQ2:{value:3},uV2:{value:50},uDim:{value:0},uT:{value:0},uP:{value:4.6},uSh:{value:0},uQ:{value:P.Q},uV:{value:P.V},uCO:{value:P.CO},uSel:{value:-1},
+    uHot:{value:HOT},uVein:{value:new THREE.Color(0x2a63d8)},uArt:{value:new THREE.Color(0xcf2f4c)},
+    uPort:{value:new THREE.Color(0x8150d8)},uUr:{value:new THREE.Color(0x4f6a86)},uTime:UT,uRev:UREV,uWave:{value:0},uShowV:{value:1},uShowU:{value:1},uInfl:{value:0}}});
+  vesMesh=new THREE.Mesh(g,vesMat);scene.add(vesMesh);
+  var hu={};for(var un in vesMat.uniforms)hu[un]=vesMat.uniforms[un];hu.uInfl={value:1};
+  haloMesh=new THREE.Mesh(g,new THREE.ShaderMaterial({side:THREE.FrontSide,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,vertexShader:VS,fragmentShader:FSG,uniforms:hu}));
+  haloMesh.renderOrder=6;scene.add(haloMesh);
+}
+
+function buildModel(man,buf){
+  man.meshes.forEach(function(m){
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(buf,m.v[0],m.v[1]),3));
+    g.setIndex(new THREE.BufferAttribute(new Uint16Array(buf,m.i[0],m.i[1]),1));
+    g.computeVertexNormals();g.computeBoundingSphere();
+    if(m.kind==='skin'){
+      skinMesh=new THREE.Mesh(g,skinMat);skinMesh.renderOrder=10;scene.add(skinMesh);
+    }else{
+      var mat=organMat(OCOL[m.key]||m.color,m.op);
+      var me=new THREE.Mesh(g,mat);me.renderOrder=2;
+      var fn=FN[m.fn];
+      me.userData={info:m.info,val:fn,title:null};
+      organGroup.add(me);pickOrgans.push(me);
+      organs.push({mat:mat,fn:fn,base:new THREE.Color(m.color),op:m.op,key:m.key,mesh:me});
+    }
+  });
+  var V=man.vessels;
+  PTS=new Float32Array(buf,V.p[0],V.p[1]);BASE=new Float32Array(buf,V.a[0],V.a[1]);VATT=new Float32Array(BASE);
+  PAR=new Int32Array(buf,V.par[0],V.par[1]);CURVES=V.curves;
+  /* Calibres du système porte sous-estimés dans l'atlas : tronc porte ~12 mm, mésentérique sup. et splénique ~9 mm */
+  CURVES.forEach(function(c){
+    var f=c.e==='Hepatic portal vein'?0:(c.e==='Superior mesenteric vein'?1.7:(c.e==='Splenic vein'?1.4:1));
+    if(f===1)return;
+    for(var i=c.s;i<c.s+c.c;i++){var o=i*4+3;PTS[o]=f===0?0.006:Math.min(0.0046,PTS[o]*f);}
+  });
+  buildVessels(PTS,VATT,CURVES);
+  var ym=new THREE.MeshBasicMaterial({color:0xf4cf6e});
+  hub=new THREE.Mesh(new THREE.SphereGeometry(0.006,14,10),ym);scene.add(hub);
+  hubRing=new THREE.Mesh(new THREE.RingGeometry(0.0085,0.0098,40),new THREE.MeshBasicMaterial({color:0xffd166,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));
+  hubRing.renderOrder=20;scene.add(hubRing);
+  cath=new THREE.Mesh(new THREE.CylinderGeometry(0.0022,0.0022,0.03,8),ym);cath.rotation.x=Math.PI/2;scene.add(cath);
+  hubPick=new THREE.Mesh(new THREE.SphereGeometry(0.022,8,6),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));
+  hubPick.userData={info:'inj',val:function(t){return t<dur()?1:0;},title:null};
+  scene.add(hubPick);pickOrgans.push(hubPick);
+  var sel=$('site');
+  man.sites.forEach(function(s,i){
+    PRESET.push({pt:nearestVein(s.pos[0],s.pos[1],s.pos[2],null),label:s.label,ph:s.ph});
+    var o=document.createElement('option');o.value=String(i);o.textContent=s.label;sel.appendChild(o);
+  });
+  sel.value='0';
+  applySite(PRESET[0].pt,PRESET[0].label,PRESET[0].ph,false);
+}
+function nearestVein(x,y,z,only){
+  var best=-1,bd=1e9;
+  for(var c=0;c<CURVES.length;c++){var cu=CURVES[c];if(!cu.v||(only!=null&&c!==only))continue;
+    for(var i=cu.s;i<cu.s+cu.c;i++){var o=i*4,dx=PTS[o]-x,dy=PTS[o+1]-y,dz=PTS[o+2]-z,d=dx*dx+dy*dy+dz*dz;if(d<bd){bd=d;best=i;}}}
+  return best;
+}
+function fillAttrs(){
+  var g=vesMesh.geometry,aA=g.attributes.aA,aB=g.attributes.aB,aK=g.attributes.aK,A=aA.array,Bq=aB.array,K=aK.array,n=PVB.length;
+  for(var p=0;p<n;p++){var o=p*7,v=PVB[p],s=PSD[p];
+    for(var j=0;j<s;j++,v++){var q=v*3;A[q]=VATT[o];A[q+1]=VATT[o+1];A[q+2]=VATT[o+2];Bq[q]=VATT[o+3];Bq[q+1]=VATT[o+4];Bq[q+2]=VATT[o+5];K[v]=VATT[o+6];}}
+  aA.needsUpdate=true;aB.needsUpdate=true;aK.needsUpdate=true;
+}
+/* Trajet du produit pur : on remonte l'arbre veineux du point choisi jusqu'au cœur droit */
+function applySite(pi,label,ph,restart){
+  if(pi<0)return;
+  VATT.set(BASE);
+  var path=[pi],p=pi,guard=0,cum=[0],L=0,i;
+  while(PAR[p]>=0&&guard++<6000){p=PAR[p];path.push(p);}
+  for(i=1;i<path.length;i++){var a=path[i-1]*4,b=path[i]*4,dx=PTS[a]-PTS[b],dy=PTS[a+1]-PTS[b+1],dz=PTS[a+2]-PTS[b+2];L+=Math.sqrt(dx*dx+dy*dy+dz*dz);cum.push(L);}
+  var Ts=Math.min(30,Math.max(1.8,L/0.0785));
+  for(i=0;i<path.length;i++){var o=path[i]*7,d=L>0?Ts*cum[i]/L:0;
+    VATT[o+3]=VATT[o];VATT[o+4]=VATT[o+1];VATT[o+5]=VATT[o+2];
+    VATT[o]=d;VATT[o+1]=1+0.04*d;VATT[o+2]=1;VATT[o+6]=10;}
+  SITE.P=Math.max(0.4,Ts-1.4);SITE.SH=Ts-6;SITE.ph=ph;SITE.label=label;SITE.T=Ts;SITE.pi=pi;
+  applyClot();fillAttrs();vesMat.uniforms.uP.value=SITE.P;vesMat.uniforms.uSh.value=SITE.SH;
+  var q=pi*4;hub.position.set(PTS[q],PTS[q+1],PTS[q+2]+0.022);cath.position.set(PTS[q],PTS[q+1],PTS[q+2]+0.009);hubPick.position.copy(hub.position);
+  INFO.inj[0]='Injection : '+label;
+  buildCurves();lastPhase='';
+  if(restart){hide();st.t=0;if(!reduce)setPlaying(true);}
+}
+
+/* ---------- Décor holographique ---------- */
+var floorM=null,dustM=null,scanRing=null,REV=null,CAM=null;
+function buildDecor(){
+  floorM=new THREE.Mesh(new THREE.CircleGeometry(0.85,96),new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+    uniforms:{uTime:UT},
+    vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:['uniform float uTime;varying vec2 vU;',
+     'void main(){vec2 q=(vU-0.5)*2.0;float r=length(q);float an=atan(q.y,q.x);',
+     ' float rings=smoothstep(0.93,1.0,abs(sin(r*3.14159*5.0-uTime*0.35)));',
+     ' float spokes=smoothstep(0.985,1.0,abs(sin(an*18.0+uTime*0.05)))*step(0.18,r);',
+     ' float core=exp(-r*r*9.0)*0.5;',
+     ' float fade=pow(max(0.0,1.0-r),1.3);',
+     ' float a=(rings*0.55+spokes*0.25+core)*fade*0.55;',
+     ' gl_FragColor=vec4(0.30,0.85,1.0,a);}'].join('\n')}));
+  floorM.rotation.x=-Math.PI/2;floorM.position.y=-0.012;floorM.renderOrder=1;scene.add(floorM);
+  var n=260,pos=new Float32Array(n*3),sd=new Float32Array(n);
+  for(var i=0;i<n;i++){var a=Math.random()*6.283,r=0.18+Math.random()*0.75;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=Math.random()*1.95;pos[i*3+2]=Math.sin(a)*r;sd[i]=Math.random();}
+  var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aS',new THREE.BufferAttribute(sd,1));
+  dustM=new THREE.Points(g,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    uniforms:{uTime:UT,uPx:{value:renderer.getPixelRatio()}},
+    vertexShader:['uniform float uTime,uPx;attribute float aS;varying float vA;',
+     'void main(){vec3 p=position;p.y=mod(p.y+uTime*(0.008+0.02*aS),1.95);',
+     ' vec4 mv=modelViewMatrix*vec4(p,1.0);vA=(0.25+0.75*abs(sin(uTime*(0.4+aS)+aS*40.0)))*smoothstep(0.0,0.15,p.y)*smoothstep(1.95,1.7,p.y);',
+     ' gl_PointSize=uPx*(1.2+2.2*aS)*(1.6/max(0.3,-mv.z));gl_Position=projectionMatrix*mv;}'].join('\n'),
+    fragmentShader:'varying float vA;void main(){float d=length(gl_PointCoord-0.5);float a=smoothstep(0.5,0.0,d)*vA*0.55;gl_FragColor=vec4(0.45,0.88,1.0,a);}'}));
+  dustM.frustumCulled=false;scene.add(dustM);
+  scanRing=new THREE.Mesh(new THREE.TorusGeometry(0.46,0.0016,6,90),new THREE.MeshBasicMaterial({color:0x7fe9ff,transparent:true,opacity:0.9,depthWrite:false,blending:THREE.AdditiveBlending}));
+  scanRing.rotation.x=Math.PI/2;scanRing.visible=false;scene.add(scanRing);
+}
+/* Apparition du corps : un plan de balayage monte des pieds à la tête */
+function startReveal(done){
+  if(reduce){UREV.value=10;if(done)done();return;}
+  UREV.value=0.02;scanRing.visible=true;REV={t0:null,n:0,ms:2400,done:done};
+}
+function ease(k){return k<0.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;}
+/* Déplacement de caméra en douceur ; annulé dès que l'utilisateur reprend la main */
+function camTo(px,py,pz,tx,ty,tz,ms){
+  if(reduce||!ms){camera.position.set(px,py,pz);controls.target.set(tx,ty,tz);controls.update();CAM=null;return;}
+  CAM={t0:null,n:0,ms:ms,p0:camera.position.clone(),q0:controls.target.clone(),p1:new THREE.Vector3(px,py,pz),q1:new THREE.Vector3(tx,ty,tz)};
+}
+function animTick(now){
+  UT.value=(now/1000)%4000;
+  if(REV&&REV.t0===null){if(++REV.n>3)REV.t0=now;}
+  else if(REV){var k=Math.min(1,(now-REV.t0)/REV.ms);UREV.value=0.02+1.9*(1-Math.pow(1-k,2.2));scanRing.position.y=UREV.value;scanRing.material.opacity=0.9*(1-k*k*k);
+    if(k>=1){UREV.value=10;scanRing.visible=false;var d=REV.done;REV=null;if(d)d();}}
+  if(CAM&&CAM.t0===null){if(++CAM.n>1)CAM.t0=now;}
+  else if(CAM){var c=Math.min(1,(now-CAM.t0)/CAM.ms),e=ease(c);camera.position.lerpVectors(CAM.p0,CAM.p1,e);controls.target.lerpVectors(CAM.q0,CAM.q1,e);if(c>=1)CAM=null;}
+}
+controls.addEventListener('start',function(){CAM=null;});
+
+/* ---------- Vue ---------- */
+var whole=false,aspect=1,camReady=false;
+function setView(){
+  var f=Math.max(1,0.85/aspect);
+  var ms=camReady?1000:0;
+  if(whole)camTo(0,0.92,2.75*f,0,0.87,0,ms);else camTo(0,1.24,1.75*f,0,1.2,0,ms);
+}
+function resize(){
+  var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
+  aspect=w/h;renderer.setSize(w,h,false);camera.aspect=aspect;camera.updateProjectionMatrix();
+}
+var firstSize=true;
+new ResizeObserver(function(){resize();if(firstSize){firstSize=false;setView();}sizeChart();}).observe(stage);
+
+/* ---------- Timeline et courbes ---------- */
+var chart=$('chart'),cx=chart.getContext('2d'),CW=300,CH=96,XP=0.55,N=170,curves=null;
+var PADL=4,PADR=4,TOP=15,BOT=14;
+function xOf(t){return PADL+(CW-PADL-PADR)*Math.pow(Math.max(0,t)/TMAX,XP);}
+function tOf(x){var u=(x-PADL)/(CW-PADL-PADR);u=Math.min(1,Math.max(0,u));return TMAX*Math.pow(u,1/XP);}
+function sizeChart(){
+  var r=chart.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);
+  CW=r.width;CH=r.height;chart.width=Math.round(CW*d);chart.height=Math.round(CH*d);cx.setTransform(d,0,0,d,0,0);
+}
+function curveSet(){
+  if(VIEW==='lung')return [['Artère pulmonaire',paF],['Veines pulmonaires',pvF],['Ventricule gauche',FN.lv]];
+  if(heart)return [['Ventricule droit',FN.rv],['Ventricule gauche',FN.lv],['Aorte et coronaires',function(t){return ves(t,16.3,3.4,1);}]];
+  if(PR)return PR.cur;
+  return [['Artère pulmonaire',paF],['Aorte',aortaF],['Foie',liver]];
+}
+function buildCurves(){
+  var cs=curveSet(),a=[],b=[],c=[];
+  for(var i=0;i<N;i++){var t=TMAX*Math.pow(i/(N-1),1/XP);a.push(EV(cs[0][1],t));b.push(EV(cs[1][1],t));c.push(EV(cs[2][1],t));}
+  curves=[a,b,c];
+  $('lg0').textContent=cs[0][0];$('lg1').textContent=cs[1][0];$('lg2').textContent=cs[2][0];
+  computeWindow();
+}
+/* Fenêtre d'acquisition : intervalle autour du pic où la courbe cible reste au-dessus du seuil */
+function computeWindow(){
+  WIN=null;var acq=$('acq'),go=$('goAcq');
+  if(!PR||heart){acq.hidden=true;go.hidden=true;return;}
+  var pk=0,pt=0,t,v,tm=tmaxN(),F=function(x){return EV(PR.f,x);};
+  for(t=0;t<=tm;t+=0.5){v=F(t);if(v>pk){pk=v;pt=t;}}
+  var lim=PR.thr*pk,t0=pt,t1=pt;
+  while(t0>0&&F(t0-0.5)>=lim)t0-=0.5;
+  while(t1<tm&&F(t1+0.5)>=lim)t1+=0.5;
+  if(PR.open)t1=tm;
+  WIN=[t0,t1];
+  acq.textContent=PR.open?("Phase excrétoire à partir de "+Math.round(t0)+" s. En pratique on attend souvent plus longtemps pour bien remplir les uretères.")
+    :("Acquisition conseillée : "+Math.round(t0)+" à "+Math.round(t1)+" s après le début de l'injection.");
+  acq.hidden=false;go.hidden=false;
+}
+function setProto(i){
+  if(i&&heart)setHeart(false);
+  PR=i?PROTO[i]:null;$('proto').value=String(i);
+  if(vesMesh){
+    var n=CURVES.length,flag=new Uint8Array(n),c,k;
+    for(k=0;k<n;k++){c=CURVES[k];flag[k]=(!PR||(PR.ves[c.k]&&!(PR.artOnly&&c.v)))?1:0;}
+    var at=vesMesh.geometry.attributes.aT,arr=at.array;
+    for(k=0;k<arr.length;k++)arr[k]=flag[VC[k]];
+    at.needsUpdate=true;vesMat.uniforms.uDim.value=PR?1:0;
+  }
+  buildCurves();
+}
+var css=getComputedStyle(document.documentElement);
+function tok(n){return css.getPropertyValue(n).trim();}
+var COL={grid:tok('--grid'),muted:tok('--muted'),fg:tok('--fg'),iode:tok('--iode'),cy:tok('--cy'),c:[tok('--vein'),tok('--art'),tok('--port')]};
+var MONO='10px "JetBrains Mono", ui-monospace, Menlo, monospace';
+var BANDS=[[15,20,'AP'],[25,35,'ART'],[70,80,'PORT'],[180,300,'TARDIVE']];
+function ticksN(){
+  var out=[[0,'0']],first=true;
+  [30,60,120,300,600,900,1200].forEach(function(v){if(v<TMAX*0.9){out.push([v,first?v+' s':String(v)]);first=false;}});
+  out.push([TMAX,String(TMAX)]);return out;
+}
+function rgba(hex,a){var h=hex.replace('#','');return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')';}
+function drawChart(t){
+  var y0=CH-BOT,h=y0-TOP,YM=1.6,i,x,y;
+  cx.clearRect(0,0,CW,CH);
+  cx.font=MONO;cx.textBaseline='alphabetic';
+  /* grille */
+  cx.strokeStyle=COL.grid;cx.lineWidth=1;cx.beginPath();
+  for(i=0;i<=3;i++){y=Math.round(TOP+h*i/3)+0.5;cx.moveTo(PADL,y);cx.lineTo(CW-PADR,y);}
+  cx.stroke();
+  /* bandes d'acquisition */
+  (WIN?[[WIN[0],WIN[1],'ACQUISITION']]:BANDS).forEach(function(b){var x1=xOf(b[0]),x2=xOf(b[1]);
+    if(b[0]>=TMAX)return;x2=xOf(Math.min(b[1],TMAX));var w=Math.max(2,x2-x1),col=WIN?COL.iode:COL.cy;
+    var g=cx.createLinearGradient(0,TOP,0,y0);g.addColorStop(0,rgba(col,WIN?0.30:0.16));g.addColorStop(1,rgba(col,0.02));
+    cx.fillStyle=g;cx.fillRect(x1,TOP,w,h);
+    cx.fillStyle=rgba(col,WIN?0.95:0.6);cx.fillRect(x1,TOP,w,1.5);
+    cx.textAlign='center';cx.fillText(b[2],Math.min(Math.max((x1+x2)/2,PADL+22),CW-PADR-24),11);});
+  /* axe */
+  cx.fillStyle=COL.muted;
+  (heart?[[0,'0'],[10,'10 s'],[20,'20'],[30,'30'],[40,'40'],[50,'50'],[60,'60']]:ticksN()).forEach(function(k){
+    var xx=xOf(k[0]);cx.textAlign=k[0]===0?'left':(k[0]===TMAX?'right':'center');
+    cx.fillText(k[1],xx,CH-3);cx.fillRect(Math.round(xx),y0,1,3);});
+  if(SPL.on&&!heart){
+    [[SPL.t0,'2E INJ'],[SPL.acq,'ACQ']].forEach(function(m){
+      if(m[0]==null||m[0]>TMAX)return;var xm=Math.round(xOf(m[0]))+0.5;
+      cx.save();cx.setLineDash([3,3]);cx.strokeStyle=COL.iode;cx.lineWidth=1;cx.beginPath();cx.moveTo(xm,TOP);cx.lineTo(xm,y0);cx.stroke();cx.restore();
+      cx.fillStyle=COL.iode;cx.textAlign='left';cx.fillText(m[1],Math.min(xm+3,CW-40),TOP+11);});
+  }
+  /* courbes : aplat dégradé + trait lumineux */
+  if(curves)curves.forEach(function(arr,ci){
+    var col=COL.c[ci];
+    cx.beginPath();
+    for(i=0;i<N;i++){x=PADL+(CW-PADL-PADR)*i/(N-1);y=y0-h*Math.min(YM,Math.max(0,arr[i]))/YM;if(i)cx.lineTo(x,y);else cx.moveTo(x,y);}
+    cx.save();cx.lineTo(CW-PADR,y0);cx.lineTo(PADL,y0);cx.closePath();
+    var g=cx.createLinearGradient(0,TOP,0,y0);g.addColorStop(0,rgba(col,0.22));g.addColorStop(1,rgba(col,0));cx.fillStyle=g;cx.fill();cx.restore();
+    cx.beginPath();
+    for(i=0;i<N;i++){x=PADL+(CW-PADL-PADR)*i/(N-1);y=y0-h*Math.min(YM,Math.max(0,arr[i]))/YM;if(i)cx.lineTo(x,y);else cx.moveTo(x,y);}
+    cx.save();cx.shadowColor=col;cx.shadowBlur=8;cx.strokeStyle=col;cx.lineWidth=1.8;cx.lineJoin='round';cx.stroke();cx.restore();
+    /* point courant sur la courbe */
+    var u=Math.pow(Math.min(1,Math.max(0,t/TMAX)),XP)*(N-1),i0=Math.floor(u),fr_=u-i0,v=arr[i0]+(arr[Math.min(N-1,i0+1)]-arr[i0])*fr_;
+    cx.save();cx.shadowColor=col;cx.shadowBlur=10;cx.fillStyle=col;cx.beginPath();cx.arc(xOf(t),y0-h*Math.min(YM,Math.max(0,v))/YM,2.6,0,6.283);cx.fill();cx.restore();
+  });
+  /* curseur de temps */
+  var xc=Math.round(xOf(t))+0.5;
+  cx.save();cx.shadowColor=COL.cy;cx.shadowBlur=10;cx.strokeStyle=COL.fg;cx.lineWidth=1;cx.beginPath();cx.moveTo(xc,TOP-3);cx.lineTo(xc,y0);cx.stroke();
+  cx.fillStyle=COL.fg;cx.beginPath();cx.moveTo(xc,TOP-1);cx.lineTo(xc-4,TOP-7);cx.lineTo(xc+4,TOP-7);cx.closePath();cx.fill();cx.restore();
+}
+
+/* ---------- État et boucle ---------- */
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var st={t:reduce?32:0,playing:false,speed:3};
+var selected=null,heart=false,VIEW=null;
+function clamp01(x){return x<0?0:(x>1?1:x);}
+function paint(t){
+  if(vesMat)vesMat.uniforms.uT.value=t;
+  for(var k=0;k<organs.length;k++){
+    var og=organs[k],ev=clamp01(EV(og.fn,t))*(OCCO[og.key]!=null?OCCO[og.key]:1);
+    var dm=(PR&&!heart&&!PR.org[og.key])?0.4:1;
+    og.mat.uniforms.uE.value=ev;og.mat.uniforms.uDm.value=dm;
+  }
+  var injOn=t<dur()||(SPL.on&&t>=SPL.t0&&t<SPL.t0+SPL.V/SPL.Q);
+  for(var ok in OV)OV[ok].visible=!!(CLOT&&CLOT.ov===ok&&(!heart||VIEW==='lung'));
+  if(hub)hub.scale.setScalar(injOn?1+0.3*Math.sin(performance.now()/110):1);
+  if(hub){hub.visible=!heart;cath.visible=!heart;}
+  if(hubRing){hubRing.visible=!heart;hubRing.position.copy(hub.position);hubRing.quaternion.copy(camera.quaternion);
+    var hk=(performance.now()/900)%1;hubRing.scale.setScalar(injOn?1+hk*2.6:1);hubRing.material.opacity=injOn?(1-hk)*0.9:0.35;}
+}
+var clockEl=$('clock'),phaseEl=$('phase'),playB=$('play'),lastPhase='',lastClock='';
+function ui(t){
+  var c=Math.round(t)+' s';if(c!==lastClock){clockEl.textContent=c;lastClock=c;chart.setAttribute('aria-valuenow',Math.round(t));}
+  var p=(SPL.on&&t>=SPL.t0)?'2e injection : '+as2(phase,t-SPL.t0):phase(t);if(p!==lastPhase){phaseEl.textContent=p;lastPhase=p;}
+  if(selected){$('infoN').textContent='Rehaussement en ce moment : '+Math.round(clamp01(EV(selected.val,t))*100)+' %';}
+}
+function setPlaying(v){st.playing=v;playB.textContent=v?'Pause':'Lecture';}
+var last=performance.now();
+function frame(now){
+  var dt=Math.min(0.1,(now-last)/1000);last=now;
+  if(st.playing){st.t+=dt*st.speed;if(st.t>=TMAX){st.t=TMAX;setPlaying(false);}}
+  animTick(now);paint(st.t);ui(st.t);drawChart(st.t);if(AX.on)drawAxial(st.t);
+  controls.update();renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Interactions ---------- */
+playB.addEventListener('click',function(){if(!st.playing&&st.t>=TMAX)st.t=0;setPlaying(!st.playing);});
+$('restart').addEventListener('click',function(){st.t=0;setPlaying(true);});
+function setSpeed(v){st.speed=v;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(o){o.setAttribute('aria-pressed',(+o.dataset.s===v)?'true':'false');});}
+Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(b){b.addEventListener('click',function(){setSpeed(+b.dataset.s);});});
+$('skin').addEventListener('click',function(){if(!skinMesh)return;skinMesh.visible=!skinMesh.visible;this.setAttribute('aria-pressed',skinMesh.visible?'true':'false');});
+/* Les uretères suivent le bouton Organes, le reste du réseau le bouton Vaisseaux */
+function syncVes(){if(!vesMesh)return;var u=vesMat.uniforms;u.uShowU.value=organGroup.visible?1:0;
+  vesMesh.visible=haloMesh.visible=(u.uShowV.value>0.5||u.uShowU.value>0.5);}
+$('org').addEventListener('click',function(){organGroup.visible=!organGroup.visible;this.setAttribute('aria-pressed',organGroup.visible?'true':'false');syncVes();});
+$('ves').addEventListener('click',function(){if(!vesMesh)return;var u=vesMat.uniforms,on=u.uShowV.value<0.5;u.uShowV.value=on?1:0;syncVes();
+  this.setAttribute('aria-pressed',on?'true':'false');
+  if(!on&&u.uSel.value>=0&&CURVES[u.uSel.value].k!=='urine')hide();});
+/* Vue Cœur : zoom sur le cœur, le reste est masqué, la timeline se resserre sur la première minute */
+var HKEYS={ra:1,rv:1,la:1,lv:1,pt:1},HC=null,HR=0.09,prevSpeed=3,skinWas=true;
+function heartCenter(){
+  if(HC)return HC;var c=new THREE.Vector3(),n=0;
+  organs.forEach(function(o){if(HKEYS[o.key]&&o.key!=='pt'){o.mesh.geometry.computeBoundingSphere();c.add(o.mesh.geometry.boundingSphere.center);n++;}});
+  if(!n)return null;HC=c.multiplyScalar(1/n);return HC;
+}
+/* Vue Poumons : circulation pulmonaire seule (artères et veines), avec le cœur pour repère */
+var LKEYS={lungR:1,lungL:1,ra:1,rv:1,la:1,lv:1,pt:1},LC=null;
+function LUNGV(c){return c.k==='ap'||c.k==='vp';}
+function lungCenter(){
+  if(LC)return LC;var c=new THREE.Vector3(),n=0;
+  organs.forEach(function(o){if(o.key==='lungR'||o.key==='lungL'){o.mesh.geometry.computeBoundingSphere();c.add(o.mesh.geometry.boundingSphere.center);n++;}});
+  if(!n)return null;LC=c.multiplyScalar(1/n);return LC;
+}
+function setFocusFlags(mode){
+  var at=vesMesh.geometry.attributes.aH,arr=at.array,f=mode==='lung'?LUNGV:HEARTV,memo={};
+  for(var k=0;k<arr.length;k++){var ci=VC[k];if(memo[ci]==null)memo[ci]=f(CURVES[ci])?1:0;arr[k]=memo[ci];}
+  at.needsUpdate=true;
+}
+function setHeart(v,mode){
+  mode=mode||'heart';
+  if(!vesMat)return;var c=mode==='lung'?lungCenter():heartCenter();if(!c)return;
+  if(v&&PR)setProto(0);
+  var was=heart;
+  heart=v;VIEW=v?mode:null;
+  $('heart').setAttribute('aria-pressed',VIEW==='heart'?'true':'false');
+  $('lung').setAttribute('aria-pressed',VIEW==='lung'?'true':'false');
+  var keys=mode==='lung'?LKEYS:HKEYS;
+  organs.forEach(function(o){o.mesh.visible=!v||!!keys[o.key];});
+  if(v&&!was)skinWas=skinMesh.visible;
+  skinMesh.visible=v?false:skinWas;
+  $('skin').setAttribute('aria-pressed',skinMesh.visible?'true':'false');
+  if(v)setFocusFlags(mode);
+  vesMat.uniforms.uFoc.value.set(c.x,c.y,c.z,v?(mode==='lung'?1.0:HR):0);
+  if(v){
+    if(pickMode)setPick(false);hide();
+    var f=Math.max(1,0.85/aspect);
+    if(mode==='lung')camTo(c.x,c.y+0.02,c.z+0.95*f,c.x,c.y,c.z,1100);else camTo(c.x+0.05,c.y+0.03,c.z+0.46*f,c.x,c.y,c.z,1100);
+    if(!was)prevSpeed=st.speed;setSpeed(1);TMAX=60;XP=1;st.t=0;if(!reduce)setPlaying(true);
+    $('view').textContent='Vue générale';
+  }else{
+    TMAX=tmaxN();XP=0.55;setSpeed(prevSpeed);setView();
+    $('view').textContent=whole?'Tronc':'Corps entier';
+  }
+  buildCurves();
+}
+$('heart').addEventListener('click',function(){if(VIEW==='heart')setHeart(false);else setHeart(true,'heart');setMenu(false);});
+$('lung').addEventListener('click',function(){if(VIEW==='lung')setHeart(false);else setHeart(true,'lung');setMenu(false);});
+var appEl=document.querySelector('.app'),fullB=$('full');
+function setFull(v){appEl.classList.toggle('full',v);fullB.setAttribute('aria-label',v?'Quitter le plein écran':'Plein écran');
+  $('fullP').setAttribute('d',v?'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5':'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');}
+fullB.addEventListener('click',function(){
+  var v=!appEl.classList.contains('full');setFull(v);
+  try{
+    if(v&&document.documentElement.requestFullscreen){var pr=document.documentElement.requestFullscreen();if(pr&&pr.catch)pr.catch(function(){});}
+    else if(!v&&document.fullscreenElement&&document.exitFullscreen){document.exitFullscreen();}
+  }catch(e){}
+});
+document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement&&appEl.classList.contains('full'))setFull(false);});
+$('view').addEventListener('click',function(){setMenu(false);if(heart){setHeart(false);return;}whole=!whole;this.textContent=whole?'Tronc':'Corps entier';setView();});
+
+var scrub=false;
+function scrubTo(ev){var r=chart.getBoundingClientRect();st.t=tOf(ev.clientX-r.left);}
+chart.addEventListener('pointerdown',function(ev){scrub=true;try{chart.setPointerCapture(ev.pointerId);}catch(e){}scrubTo(ev);});
+chart.addEventListener('pointermove',function(ev){if(scrub)scrubTo(ev);});
+chart.addEventListener('pointerup',function(){scrub=false;});
+chart.addEventListener('pointercancel',function(){scrub=false;});
+chart.addEventListener('keydown',function(ev){
+  var d=ev.shiftKey?10:1;
+  if(ev.key==='ArrowRight'){st.t=Math.min(TMAX,st.t+d);ev.preventDefault();}
+  else if(ev.key==='ArrowLeft'){st.t=Math.max(0,st.t-d);ev.preventDefault();}
+  else if(ev.key===' '){setPlaying(!st.playing);ev.preventDefault();}
+});
+
+function fr(n,dec){return n.toLocaleString('fr-FR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+function params(){
+  P.Q=+$('q').value;P.V=+$('v').value;P.CO=+$('co').value;
+  $('qv').textContent=fr(P.Q,1)+' mL/s';$('vv').textContent=P.V+' mL';
+  durText();SPL.acq=null;$('cov').textContent=fr(P.CO,1)+' L/min';
+  if(vesMat){vesMat.uniforms.uQ.value=P.Q;vesMat.uniforms.uV.value=P.V;vesMat.uniforms.uCO.value=P.CO;}
+  buildCurves();lastPhase='';
+}
+['q','v','co'].forEach(function(id){$(id).addEventListener('input',params);});
+function durText(){$('dur').textContent="Durée d'injection : "+Math.round(dur())+' s'+(SPL.on?' + '+Math.round(SPL.V/SPL.Q)+' s':'');}
+function applySplit(){
+  SPL.Q=+$('q2').value;SPL.V=+$('v2').value;SPL.t0=+$('t2').value;
+  $('q2v').textContent=fr(SPL.Q,1)+' mL/s';$('v2v').textContent=SPL.V+' mL';$('t2v').textContent=SPL.t0+' s';
+  if(vesMat){var u=vesMat.uniforms;u.uS2.value=SPL.on?1:0;u.uT2.value=SPL.t0;u.uQ2.value=SPL.Q;u.uV2.value=SPL.V;}
+  if(!heart){TMAX=tmaxN();if(st.t>TMAX)st.t=TMAX;}
+  durText();buildCurves();lastPhase='';
+}
+function setSplit(v){
+  /* On mémorise les réglages de la 1re injection à l'activation, et on les remet à la désactivation */
+  if(v&&!SPL.on)SPL.saved={q:$('q').value,v:$('v').value};
+  if(!v&&SPL.on&&SPL.saved){$('q').value=SPL.saved.q;$('v').value=SPL.saved.v;SPL.on=false;params();}
+  SPL.on=v;SPL.acq=null;$('spl').setAttribute('aria-pressed',v?'true':'false');$('splG').hidden=!v;$('splP').hidden=!v;$('splP').value='';
+  applySplit();
+}
+/* Préréglages indicatifs, à ajuster selon les protocoles du service */
+var SPLP={
+  orl:{q:2,v:60,q2:3,v2:40,t2:90,acq:120},
+  uro:{q:2,v:40,q2:3,v2:80,t2:480,acq:555}
+};
+$('spl').addEventListener('click',function(){setSplit(!SPL.on);});
+$('splP').addEventListener('change',function(){
+  var k=SPLP[this.value];if(!k)return;
+  $('q').value=k.q;$('v').value=k.v;$('q2').value=k.q2;$('v2').value=k.v2;$('t2').value=k.t2;
+  params();applySplit();SPL.acq=k.acq;st.t=k.acq;setPlaying(false);
+});
+['q2','v2','t2'].forEach(function(id){$(id).addEventListener('input',function(){SPL.acq=null;$('splP').value='';applySplit();});});
+PROTO.forEach(function(pr,i){var o=document.createElement('option');o.value=String(i);o.textContent=pr.label;$('proto').appendChild(o);});
+$('proto').addEventListener('change',function(){setProto(parseInt(this.value,10)||0);});
+$('goAcq').addEventListener('click',function(){
+  if(!WIN)return;st.t=PR.open?Math.min(TMAX,WIN[0]+15):(WIN[0]+WIN[1])/2;setPlaying(false);
+});
+
+/* Sélection : un vaisseau sous le doigt l'emporte sur l'organe qui l'entoure */
+var ray=new THREE.Raycaster(),ndc=new THREE.Vector2(),down=null;
+var cv=renderer.domElement;
+function cast(px,py,r){
+  ndc.set(((px-r.left)/r.width)*2-1,-((py-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  var hv=(vesMesh&&vesMesh.visible)?ray.intersectObject(vesMesh,false):[];
+  if(vesMesh){var su=vesMat.uniforms;hv=hv.filter(function(h){return CURVES[VC[h.face.a]].k==='urine'?su.uShowU.value>0.5:su.uShowV.value>0.5;});}
+  if(VIEW==='heart'&&HC)hv=hv.filter(function(h){return h.point.distanceTo(HC)<=HR&&HEARTV(CURVES[VC[h.face.a]]);});
+  else if(VIEW==='lung')hv=hv.filter(function(h){return LUNGV(CURVES[VC[h.face.a]]);});
+  var ho=ray.intersectObjects(pickOrgans.filter(function(o){return o.visible&&(organGroup.visible||o.userData.info==='inj');}),false);
+  return {v:hv.length?hv[0]:null,o:ho.length?ho[0]:null};
+}
+function setAst(v){$('astP').hidden=!v;$('astB').setAttribute('aria-expanded',v?'true':'false');}
+$('astB').addEventListener('click',function(){setAst($('astP').hidden);});
+$('sheetB').addEventListener('click',function(){var o=!$('panel').classList.contains('open');$('panel').classList.toggle('open',o);this.setAttribute('aria-expanded',o?'true':'false');this.setAttribute('aria-pressed',o?'true':'false');});
+function setMenu(v){$('menu').hidden=!v;$('menuB').setAttribute('aria-expanded',v?'true':'false');}
+$('menuB').addEventListener('click',function(){setMenu($('menu').hidden);});
+cv.addEventListener('pointerdown',function(ev){setMenu(false);setAst(false);down={x:ev.clientX,y:ev.clientY,t:performance.now()};});
+cv.addEventListener('pointerup',function(ev){
+  if(!down)return;var dx=ev.clientX-down.x,dy=ev.clientY-down.y,dtm=performance.now()-down.t;down=null;
+  if(dx*dx+dy*dy>49||dtm>500)return;
+  var r=cv.getBoundingClientRect();
+  if(pickMode){pickVein(ev.clientX,ev.clientY,r);return;}
+  var h=cast(ev.clientX,ev.clientY,r);
+  if(h.o&&h.o.object.userData.info==='inj'){showOrgan(h.o.object.userData);return;}
+  if(h.v){showVessel(VC[h.v.face.a]);return;}
+  if(h.o){showOrgan(h.o.object.userData);return;}
+  var off=[[7,0],[-7,0],[0,7],[0,-7]],best=null;
+  for(var i=0;i<4;i++){var h2=cast(ev.clientX+off[i][0],ev.clientY+off[i][1],r);
+    if(h2.v&&(!best||h2.v.distance<best.distance))best=h2.v;}
+  if(best)showVessel(VC[best.face.a]);else hide();
+});
+function card(title,cat,text){
+  $('infoT').textContent=title;$('infoC').textContent=cat||'';$('infoC').hidden=!cat;
+  $('infoP').textContent=text;$('info').hidden=false;$('hint').hidden=true;
+}
+function showOrgan(ud){var inf=INFO[ud.info];if(!inf)return;selected=ud;
+  if(vesMat)vesMat.uniforms.uSel.value=-1;card(inf[0],'',inf[1]);}
+function showVessel(ci){var c=CURVES[ci],mid=c.s+(c.c>>1),o=mid*7;
+  var key=VATT[o+6]>9.5?(c.e==='Superior vena cava'?'vcs':'bras'):c.k,inf=INFO[key]||['',''];
+  selected={val:function(t){return vesAttr(t,VATT,o);}};
+  vesMat.uniforms.uSel.value=ci;card(c.n,inf[0]===c.n?'':inf[0],inf[1]);}
+function hide(){selected=null;if(vesMat)vesMat.uniforms.uSel.value=-1;$('info').hidden=true;$('hint').hidden=!$('hint').textContent;}
+/* Mode « choisir la veine » : seul moment où un toucher déplace le point d'injection */
+var pickMode=false,HINT="";
+function setPick(v){
+  if(v&&!vesMesh)return;
+  pickMode=v;$('pickV').setAttribute('aria-pressed',v?'true':'false');
+  if(v){hide();if(vesMat.uniforms.uShowV.value<0.5){vesMat.uniforms.uShowV.value=1;syncVes();$('ves').setAttribute('aria-pressed','true');}}
+  $('hint').textContent=v?"Touche la veine où injecter. Touche à nouveau le bouton pour annuler.":HINT;$('hint').hidden=!v;
+}
+$('pickV').addEventListener('click',function(){setPick(!pickMode);});
+function veinHit(px,py,r){
+  ndc.set(((px-r.left)/r.width)*2-1,-((py-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  var hs=ray.intersectObject(vesMesh,false);
+  for(var i=0;i<hs.length;i++){if(CURVES[VC[hs[i].face.a]].v)return hs[i];}
+  return null;
+}
+function pickVein(px,py,r){
+  var h=veinHit(px,py,r),off=[[7,0],[-7,0],[0,7],[0,-7],[5,5],[-5,5],[5,-5],[-5,-5]];
+  for(var i=0;!h&&i<off.length;i++)h=veinHit(px+off[i][0],py+off[i][1],r);
+  if(!h)return;
+  var ci=VC[h.face.a],c=CURVES[ci],pi=nearestVein(h.point.x,h.point.y,h.point.z,ci),sel=$('site');
+  var o=sel.querySelector('option[value="custom"]');
+  if(!o){o=document.createElement('option');o.value='custom';sel.appendChild(o);}
+  o.textContent='Au choix : '+c.n;sel.value='custom';
+  setPick(false);
+  applySite(pi,c.n,'Trajet veineux du produit pur',true);
+}
+$('site').addEventListener('change',function(){
+  if(pickMode)setPick(false);
+  var i=parseInt(this.value,10);if(isNaN(i)||!PRESET[i])return;
+  applySite(PRESET[i].pt,PRESET[i].label,PRESET[i].ph,true);
+});
+$('infoX').addEventListener('click',hide);
+
+/* ---------- Coupe axiale : section du modèle par un plan horizontal, rendue en niveaux de gris façon scanner ---------- */
+var AX={on:false,y:1.26,skin:null,org:null,dots:null,caps:null,dirty:true,plane:null,W:0};
+/* Densités en UH : [sans injection, gain au premier passage, gain à l'équilibre]. Fenêtre TAP W350 / L50.
+   Calées sur des coupes réelles sans injection et en portal (foie +55 UH, rate et vaisseaux ~120-160 UH au portal). */
+var AXH={lungR:[-850,40,0],lungL:[-850,40,0],ra:[40,260,90],rv:[40,260,90],la:[40,260,90],lv:[40,260,90],pt:[40,260,90],
+  liver:[54,90,20],spleen:[46,110,75],pancreas:[40,90,55],kidR:[30,170,60],kidL:[30,170,60],pelvR:[8,800,0],pelvL:[8,800,0],bladder:[8,800,0],
+  stomach:[25,45,30],duodenum:[25,45,30],colon:[20,40,25],jejunum:[25,45,30],brain:[34,18,4]};
+var AXBLOOD=[40,260,90],AXMUS=[50,0,12],AXFAT=-100,AXVISC=-55,AXSKIN=45;
+function win(hu){return gray((hu+125)/350*255);}
+/* Composante d'équilibre (produit redistribué dans le secteur extracellulaire), au-delà du premier passage */
+function eqR(t){return (P.V/90)/(1+Math.exp(-((t-delay(16)-dur()/2-25*kk())/10)))*Math.exp(-Math.max(0,t-90)/450);}
+var AXORD=['stomach','colon','duodenum','jejunum','lungR','lungL','liver','spleen','pancreas','kidR','kidL','brain','pelvR','pelvL','bladder','pt','rv','ra','la','lv'];
+/* Intersection d'un maillage avec le plan y : segments chaînés en contours */
+function sliceMesh(geo,y,bridge){return sliceCore(geo.attributes.position.array,geo.index.array,y,bridge,0,geo.index.array.length);}
+function sliceCore(pos,idx,y,bridge,i0,i1){
+  var sa=[],sb=[],pts=[],pm=new Map(),i,j;
+  function ep(a,b){
+    if(a>b){var t=a;a=b;b=t;}
+    var k=a*2097152+b,id=pm.get(k);if(id!==undefined)return id;
+    var ya=pos[a*3+1],yb=pos[b*3+1],u=(y-ya)/(yb-ya);id=pts.length/2;
+    pts.push(pos[a*3]+(pos[b*3]-pos[a*3])*u,pos[a*3+2]+(pos[b*3+2]-pos[a*3+2])*u);pm.set(k,id);return id;
+  }
+  for(i=i0;i<i1;i+=3){
+    var a=idx[i],b=idx[i+1],c=idx[i+2],da=pos[a*3+1]>y,db=pos[b*3+1]>y,dc=pos[c*3+1]>y;
+    if(da===db&&db===dc)continue;
+    if(da!==db&&da!==dc){sa.push(ep(a,b));sb.push(ep(a,c));}
+    else if(db!==da&&db!==dc){sa.push(ep(b,a));sb.push(ep(b,c));}
+    else{sa.push(ep(c,a));sb.push(ep(c,b));}
+  }
+  var n=pts.length/2,adj=new Array(n),ns=sa.length,used=new Uint8Array(ns),loops=[];
+  for(i=0;i<ns;i++){(adj[sa[i]]||(adj[sa[i]]=[])).push(i);(adj[sb[i]]||(adj[sb[i]]=[])).push(i);}
+  for(i=0;i<ns;i++){
+    if(used[i])continue;used[i]=1;
+    var first=sa[i],cur=sb[i],lp=[pts[first*2],pts[first*2+1],pts[cur*2],pts[cur*2+1]],g=0;
+    while(cur!==first&&g++<200000){
+      var l=adj[cur],nx=-1;for(j=0;j<l.length;j++)if(!used[l[j]]){nx=l[j];break;}
+      if(nx<0)break;used[nx]=1;cur=sa[nx]===cur?sb[nx]:sa[nx];lp.push(pts[cur*2],pts[cur*2+1]);
+    }
+    var closed=(cur===first);
+    if(!closed){
+      /* chaîne ouverte : on la prolonge aussi par l'autre bout */
+      var c2=first,pre=[];g=0;
+      while(g++<200000){
+        var l2=adj[c2],n2=-1;for(j=0;j<l2.length;j++)if(!used[l2[j]]){n2=l2[j];break;}
+        if(n2<0)break;used[n2]=1;c2=sa[n2]===c2?sb[n2]:sa[n2];pre.push(pts[c2*2],pts[c2*2+1]);
+        if(c2===cur){closed=true;break;}
+      }
+      if(pre.length){var np=[];for(j=pre.length-2;j>=0;j-=2)np.push(pre[j],pre[j+1]);lp=np.concat(lp);}
+    }
+    if(lp.length>=6){lp.closed=closed;loops.push(lp);}
+  }
+  /* Contours ouverts (surface incomplète) : on raccorde les extrémités les plus proches */
+  if(bridge){
+    var bmax=bridge===true?0.0225:bridge*bridge;
+    var open=loops.filter(function(l){return !l.closed;});loops=loops.filter(function(l){return l.closed;});
+    while(open.length){
+      var A=open.pop(),ex=A[A.length-2],ez=A[A.length-1],best=Math.pow(A[0]-ex,2)+Math.pow(A[1]-ez,2),bi=-1,rev=false;
+      for(i=0;i<open.length;i++){var B=open[i],d0=Math.pow(B[0]-ex,2)+Math.pow(B[1]-ez,2),d1=Math.pow(B[B.length-2]-ex,2)+Math.pow(B[B.length-1]-ez,2);
+        if(d0<best){best=d0;bi=i;rev=false;}if(d1<best){best=d1;bi=i;rev=true;}}
+      if(bi<0||best>bmax){loops.push(A);continue;}
+      var Bq=open.splice(bi,1)[0];
+      if(rev){for(j=Bq.length-2;j>=0;j-=2)A.push(Bq[j],Bq[j+1]);}else{for(j=0;j<Bq.length;j++)A.push(Bq[j]);}
+      open.push(A);
+    }
+  }
+  /* même sens de parcours pour tous : le remplissage devient une union */
+  for(i=0;i<loops.length;i++){var L=loops[i],ar=0;
+    for(j=0;j<L.length;j+=2){var j2=(j+2)%L.length;ar+=L[j]*L[j2+1]-L[j2]*L[j+1];}
+    if(ar<0){var R=[];for(j=L.length-2;j>=0;j-=2)R.push(L[j],L[j+1]);R.closed=L.closed;loops[i]=R;}}
+  return loops;
+}
+/* Enveloppe convexe d'un ensemble de contours (pour le cerveau, fait de nombreux fragments) */
+function hullOf(loops){
+  var P=[],i,j;for(i=0;i<loops.length;i++)for(j=0;j<loops[i].length;j+=2)P.push([loops[i][j],loops[i][j+1]]);
+  if(P.length<3)return [];
+  P.sort(function(a,b){return a[0]-b[0]||a[1]-b[1];});
+  function cr(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);}
+  var lo=[],up=[];
+  for(i=0;i<P.length;i++){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],P[i])<=0)lo.pop();lo.push(P[i]);}
+  for(i=P.length-1;i>=0;i--){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],P[i])<=0)up.pop();up.push(P[i]);}
+  lo.pop();up.pop();var H=lo.concat(up),out=[];for(i=0;i<H.length;i++)out.push(H[i][0],H[i][1]);return [out];
+}
+/* Os et muscles : chargés à la première ouverture de la coupe, jamais affichés en 3D */
+var AXD=null;
+function loadAxial(){
+  if(AXD||AX.loading)return;AX.loading=true;
+  get('axial.b64.txt',true).then(function(buf){
+    var dv=new DataView(buf),o=0,ng=dv.getUint32(0,true),lo=[],hi=[],k,i;o=4;
+    for(k=0;k<3;k++){lo.push(dv.getFloat32(o,true));o+=4;}
+    for(k=0;k<3;k++){hi.push(dv.getFloat32(o,true));o+=4;}
+    var out=[];
+    for(var g=0;g<ng;g++){
+      var nv=dv.getUint32(o,true),nt=dv.getUint32(o+4,true),CH=dv.getUint32(o+8,true),H=dv.getFloat32(o+12,true);o+=16;
+      var nch=Math.ceil(nt/CH),bases=new Uint32Array(buf,o,nch);o+=nch*4;
+      var q=new Uint16Array(buf,o,nv*3);o+=nv*6;o+=(4-o%4)%4;
+      var D=new Uint16Array(buf,o,nt*3);o+=nt*6;o+=(4-o%4)%4;
+      var pos=new Float32Array(nv*3),idx=new Uint32Array(nt*3),ymin=new Float32Array(nt);
+      for(i=0;i<nv*3;i++){k=i%3;pos[i]=lo[k]+q[i]/65535*(hi[k]-lo[k]);}
+      for(i=0;i<nt;i++){var b=bases[(i/CH)|0],a0=D[i*3]+b,a1=D[i*3+1]+b,a2=D[i*3+2]+b;idx[i*3]=a0;idx[i*3+1]=a1;idx[i*3+2]=a2;
+        ymin[i]=Math.min(pos[a0*3+1],pos[a1*3+1],pos[a2*3+1]);}
+      out.push({pos:pos,idx:idx,ymin:ymin,H:H,nt:nt});
+    }
+    AXD={bone:out[0],mus:out[1]};AX.dirty=true;
+  }).catch(function(e){AX.loading=false;if(window.console)console.error(e);});
+}
+function sliceDetail(G,y,maxGap){
+  function lb(v){var a=0,b=G.nt;while(a<b){var m=(a+b)>>1;if(G.ymin[m]<v)a=m+1;else b=m;}return a;}
+  /* surfaces fermées : les rares contours ouverts sont raccordés s'ils sont à moins de 1,2 cm */
+  var L=sliceCore(G.pos,G.idx,y,0.012,lb(y-G.H-1e-4)*3,lb(y+1e-6)*3);
+  /* une longue corde de fermeture donnerait un faux aplat : on écarte ces contours si demandé */
+  if(maxGap)L=L.filter(function(l){if(l.closed)return true;var n=l.length,dx=l[0]-l[n-2],dz=l[1]-l[n-1];return dx*dx+dz*dz<maxGap*maxGap;});
+  return L;
+}
+function sliceAll(){
+  var y=AX.y,i,c;
+  AX.skin=sliceMesh(skinMesh.geometry,y,true);
+  AX.org={};organs.forEach(function(o){var bs=o.mesh.geometry.boundingSphere;
+    if(bs&&Math.abs(bs.center.y-y)>bs.radius){AX.org[o.key]=[];return;}
+    AX.org[o.key]=sliceMesh(o.mesh.geometry,y,!HKEYS[o.key]);if(o.key==='brain')AX.org[o.key]=hullOf(AX.org[o.key]);});
+  /* silhouette du cœur : enveloppe des quatre cavités, pour figurer le myocarde entre elles */
+  AX.hh=hullOf([].concat(AX.org.ra||[],AX.org.rv||[],AX.org.la||[],AX.org.lv||[]));
+  /* les maillages des cavités sont des parois creuses : l'enveloppe de chacune donne le sang qu'elle contient */
+  AX.hk={};['pt','rv','ra','la','lv'].forEach(function(k){AX.hk[k]=hullOf(AX.org[k]||[]);});
+  AX.bone=AXD?sliceDetail(AXD.bone,y,0.035):null;AX.mus=AXD?sliceDetail(AXD.mus,y,0.03):null;
+  var dots=[],caps=[];
+  for(c=0;c<CURVES.length;c++){var cu=CURVES[c];
+    for(i=cu.s;i<cu.s+cu.c-1;i++){
+      var q=i*4,ya=PTS[q+1],yb=PTS[q+5];
+      if((ya>y)!==(yb>y)){var u=(y-ya)/(yb-ya);dots.push(PTS[q]+(PTS[q+4]-PTS[q])*u,PTS[q+2]+(PTS[q+6]-PTS[q+2])*u,PTS[q+3]+(PTS[q+7]-PTS[q+3])*u,(u<0.5?i:i+1)*7);}
+      else{var ra=PTS[q+3];if(Math.abs(ya-y)<ra&&Math.abs(yb-y)<ra)caps.push(PTS[q],PTS[q+2],PTS[q+4],PTS[q+6],ra,i*7);}
+    }}
+  AX.dots=dots;AX.caps=caps;AX.dirty=false;
+  var lv=y>1.5?'Tête':(y>1.41?'Cou':(y>1.17?'Thorax':(y>0.98?'Abdomen':(y>0.84?'Pelvis':(y>0.5?'Cuisses':'Jambes')))));
+  $('axL').textContent=lv+' · '+Math.round(y*100)+' cm';
+}
+function gray(v){v=Math.round(Math.max(0,Math.min(255,v)));return 'rgb('+v+','+v+','+v+')';}
+function drawAxial(t){
+  var cv=$('axC'),W=cv.clientWidth;if(!W)return;
+  var d=Math.min(window.devicePixelRatio||1,2),ctx=cv.getContext('2d');
+  if(cv.width!==Math.round(W*d)){cv.width=cv.height=Math.round(W*d);}
+  if(AX.dirty)sliceAll();
+  var FOV=0.56,S=W/FOV,cx0=W/2,cy0=W/2+0.01*S,i,j,lp;
+  function path(loops){ctx.beginPath();for(i=0;i<loops.length;i++){lp=loops[i];ctx.moveTo(cx0+lp[0]*S,cy0-lp[1]*S);for(j=2;j<lp.length;j+=2)ctx.lineTo(cx0+lp[j]*S,cy0-lp[j+1]*S);ctx.closePath();}}
+  ctx.setTransform(d,0,0,d,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,W,W);
+  ctx.save();ctx.beginPath();ctx.arc(W/2,W/2,W/2,0,6.2832);ctx.clip();
+  var EQ=EV(eqR,t),mus=win(AXMUS[0]+AXMUS[2]*EQ);
+  /* Paroi : peau, graisse sous-cutanée, muscle ; tronc rempli de graisse viscérale mêlée, membres remplis de muscle */
+  if(AX.mus){
+    /* vrais muscles : le corps est rempli de graisse, les muscles viennent par-dessus */
+    path(AX.skin);ctx.fillStyle=win(-88);ctx.fill('nonzero');
+    ctx.save();ctx.clip('nonzero');ctx.strokeStyle=win(AXSKIN);ctx.lineWidth=Math.max(1.5,2*0.002*S);ctx.stroke();ctx.restore();
+    path(AX.mus);ctx.fillStyle=mus;ctx.fill('evenodd');
+  }
+  else for(var li=0;li<AX.skin.length;li++){
+    var L=AX.skin[li],ar=0,mx=0;
+    for(j=0;j<L.length;j+=2){var j2=(j+2)%L.length;ar+=L[j]*L[j2+1]-L[j2]*L[j+1];mx+=L[j];}
+    ar=Math.abs(ar)/2;mx/=(L.length/2);
+    var trunk=Math.abs(mx)<0.05&&ar>0.012;
+    path([L]);ctx.save();ctx.clip();
+    ctx.fillStyle=trunk?win(AXVISC):mus;ctx.fill();
+    if(trunk){ctx.strokeStyle=mus;ctx.lineWidth=2*0.023*S;ctx.stroke();}
+    ctx.strokeStyle=win(AXFAT);ctx.lineWidth=2*(trunk?0.016:0.007)*S;ctx.stroke();
+    ctx.strokeStyle=win(AXSKIN);ctx.lineWidth=Math.max(1,2*0.0015*S);ctx.stroke();
+    ctx.restore();
+  }
+  var myo=win(45+60*Math.max(0,Math.min(1,EV(aortaF,t)))+30*EQ);
+  AXORD.forEach(function(k){
+    if(k==='pt'&&AX.hh&&AX.hh.length){path(AX.hh);ctx.fillStyle=myo;ctx.fill();}
+    var loops=AX.org[k];if(!loops||!loops.length)return;
+    var og=null;for(var q=0;q<organs.length;q++)if(organs[q].key===k){og=organs[q];break;}
+    var oc=OCCO[k]!=null?OCCO[k]:1,e=og?Math.max(0,Math.min(1,EV(og.fn,t)))*oc:0,g=AXH[k]||[40,80,20];
+    if(AX.hk[k]){
+      /* cavité cardiaque : le sang remplit l'enveloppe, la paroi est tracée par-dessus (le maillage est tantôt plein, tantôt creux) */
+      if(AX.hk[k].length){path(AX.hk[k]);ctx.fillStyle=win(g[0]+g[1]*e+g[2]*EQ*oc);ctx.fill();}
+      ctx.beginPath();
+      for(var w=0;w<loops.length;w++){var lw=loops[w];ctx.moveTo(cx0+lw[0]*S,cy0-lw[1]*S);
+        for(var w2=2;w2<lw.length;w2+=2)ctx.lineTo(cx0+lw[w2]*S,cy0-lw[w2+1]*S);if(lw.closed)ctx.closePath();}
+      ctx.strokeStyle=myo;ctx.lineWidth=Math.max(1.5,0.004*S);ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+      return;
+    }
+    path(loops);ctx.fillStyle=win(g[0]+g[1]*e+g[2]*EQ*oc);ctx.fill('nonzero');});
+  if(AX.bone){path(AX.bone);ctx.fillStyle=win(185);ctx.fill('evenodd');ctx.strokeStyle=win(900);ctx.lineWidth=Math.max(1,0.0016*S);ctx.stroke();}
+  var D=AX.dots,C=AX.caps,e,r;
+  ctx.lineCap='round';
+  for(i=0;i<C.length;i+=6){e=Math.max(0,Math.min(1,EV(function(tt){return vesAttr(tt,VATT,C[i+5]);},t)));
+    ctx.strokeStyle=win(AXBLOOD[0]+AXBLOOD[1]*e+(VATT[C[i+5]+2]<0?0:AXBLOOD[2]*EQ));ctx.lineWidth=Math.max(1,2*C[i+4]*S);
+    ctx.beginPath();ctx.moveTo(cx0+C[i]*S,cy0-C[i+1]*S);ctx.lineTo(cx0+C[i+2]*S,cy0-C[i+3]*S);ctx.stroke();}
+  for(i=0;i<D.length;i+=4){e=Math.max(0,Math.min(1,EV(function(tt){return vesAttr(tt,VATT,D[i+3]);},t)));
+    r=Math.max(0.7,D[i+2]*S);ctx.fillStyle=win(AXBLOOD[0]+AXBLOOD[1]*e+(VATT[D[i+3]+2]<0?0:AXBLOOD[2]*EQ));
+    ctx.beginPath();ctx.arc(cx0+D[i]*S,cy0-D[i+1]*S,r,0,6.2832);ctx.fill();}
+  ctx.restore();
+  /* repères radiologiques : vue par les pieds, droite du patient à gauche de l'image */
+  ctx.font='600 '+Math.max(9,W*0.055)+'px "Chakra Petch", system-ui, sans-serif';ctx.fillStyle='rgba(95,224,255,.9)';ctx.textBaseline='middle';
+  ctx.textAlign='left';ctx.fillText('D',W*0.035,W/2);ctx.textAlign='right';ctx.fillText('G',W*0.965,W/2);
+  ctx.textAlign='center';ctx.fillText('A',W/2,W*0.05);
+}
+function setAxial(v){
+  if(!skinMesh)return;
+  AX.on=v;$('axB').setAttribute('aria-pressed',v?'true':'false');$('ax').hidden=!v;
+  if(!AX.plane){
+    AX.plane=new THREE.Group();
+    var dm=new THREE.Mesh(new THREE.CircleGeometry(0.34,64),new THREE.MeshBasicMaterial({color:0x5fe0ff,transparent:true,opacity:0.10,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));
+    dm.rotation.x=-Math.PI/2;AX.plane.add(dm);
+    var rg=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.0014,6,90),new THREE.MeshBasicMaterial({color:0x8feaff,transparent:true,opacity:0.95,depthWrite:false,blending:THREE.AdditiveBlending}));
+    rg.rotation.x=Math.PI/2;AX.plane.add(rg);AX.plane.renderOrder=12;scene.add(AX.plane);
+  }
+  AX.plane.visible=v;AX.plane.position.y=AX.y;AX.dirty=true;if(v)loadAxial();
+}
+$('axB').addEventListener('click',function(){setAxial(!AX.on);setMenu(false);});
+$('axY').addEventListener('input',function(){AX.y=1.8-(+this.value);AX.dirty=true;if(AX.plane)AX.plane.position.y=AX.y;});
+$('axBig').addEventListener('click',function(){var b=!$('ax').classList.contains('big');$('ax').classList.toggle('big',b);this.setAttribute('aria-pressed',b?'true':'false');});
+
+/* ---------- Caillots ---------- */
+var APAR=null,CLOT=null,clotM=null,OCCO={};
+var CLOTS=[
+ {label:'Aucun'},
+ {label:'Occlusion poplitée aiguë droite',curve:'Popliteal artery.r',frac:0.4,
+  title:'Occlusion aiguë de la poplitée droite',
+  text:"Occlusion aiguë (embolie, thrombose d'anévrisme poplité) : les collatérales n'ont pas eu le temps de se développer, les tibiales, la fibulaire et les artères du pied ne se rehaussent plus. L'opacification s'arrête net au caillot. Le retour veineux est laissé normal."},
+ {label:'Occlusion poplitée chronique droite',curve:'Popliteal artery.r',frac:0.4,reprise:true,seg:0.045,segTo:'Anterior tibial artery.r',segMargin:0.01,lag:7,amp:0.55,
+  title:'Occlusion chronique de la poplitée droite',
+  text:"Occlusion chronique athéromateuse : la poplitée reste sombre jusqu'à environ 1 cm avant sa bifurcation, puis l'aval se réopacifie par les collatérales du genou (non dessinées), moins dense et avec quelques secondes de retard. C'est l'image classique de l'artériopathie à l'angioscanner. Le retour veineux est laissé normal."},
+ {label:'Embolie lobaire inférieure droite',curve:'Inferior lobar artery of right lung',frac:0.2,ov:'lungR',near:0.012,far:0.04,
+  title:'Caillot : artère lobaire inférieure droite',
+  text:"Embolie lobaire : les artères segmentaires basales droites ne se rehaussent plus, d'où le défect de perfusion du lobe inférieur droit (zone sombre). Le reste de l'arbre pulmonaire est normal. Simplification : le retour par les veines pulmonaires est laissé normal."},
+ {label:'Embolie segmentaire basale gauche',curve:'Posterior basal segmental artery of left lung',frac:0.2,ov:'lungL',near:0.006,far:0.022,
+  title:'Caillot : artère segmentaire basale postérieure gauche',
+  text:"Embolie segmentaire : seule l'artère basale postérieure gauche est amputée, avec un petit défect de perfusion à la base gauche. C'est le type d'embolie distale que l'angioscanner doit savoir détecter. Simplification : le retour par les veines pulmonaires est laissé normal."},
+ {label:'Occlusion carotide interne gauche',curve:'Internal carotid artery.l',frac:0.15,side:'.l',onlyOcc:'Internal carotid artery.l',lag:2.5,amp:0.7,
+  excl:/\?|basilar|cerebellar|pontine|spinal|Posterior cerebral|Parieto-occipital|occipital artery|Posterior communicating|deep temporal|Vertebral|sphenopalatine/i,
+  add:/middle cerebral|anterior cerebral|callosomarginal|pericallosal|Orbitofrontal/i,
+  title:'Caillot : carotide interne gauche',
+  text:"Occlusion de la carotide interne gauche avec suppléance : la carotide reste sombre du caillot jusqu'à sa terminaison. La cérébrale antérieure et la sylvienne gauches sont réalimentées par le polygone de Willis (communicantes antérieure et postérieure), et l'ophtalmique par la carotide externe. Elles se réopacifient un peu moins denses et avec 2 à 3 s de retard. Pas d'hypoperfusion si le polygone est complet."}
+];
+function clotPoint(d){
+  var pts=[];
+  CURVES.forEach(function(c){if(c.e===d.curve)for(var i=c.s;i<c.s+c.c;i++)pts.push(i);});
+  if(!pts.length)return -1;
+  pts.sort(function(a,b){return BASE[a*7]-BASE[b*7];});
+  return pts[Math.round(d.frac*(pts.length-1))];
+}
+function applyClot(){
+  OCCO={};if(clotM)clotM.visible=false;
+  if(!CLOT||!APAR||CLOT.pt<0)return;
+  var d=CLOT,cp=d.pt,n=APAR.length,memo=new Int8Array(n),occ=new Uint8Array(n),i,j,k,c,cu,o;
+  /* aval du caillot dans l'arbre artériel */
+  for(i=0;i<n;i++){
+    if(APAR[i]<0||i===cp)continue;
+    var path=[],r=2;k=i;
+    while(k>=0){if(memo[k]){r=memo[k];break;}if(k===cp){r=1;break;}path.push(k);k=APAR[k];}
+    for(j=0;j<path.length;j++)memo[path[j]]=r;
+    if(r===1)occ[i]=1;
+  }
+  var cy=PTS[cp*4+1],rp=new Uint8Array(n);
+  /* Reprise distale : au-delà d'un segment occlus, l'aval est réopacifié par les collatérales */
+  if(d.reprise){
+    var dd=new Float32Array(n).fill(-1);dd[cp]=0;
+    for(i=0;i<n;i++){
+      if(!occ[i]||dd[i]>=0)continue;
+      var st_=[];k=i;while(k>=0&&dd[k]<0){st_.push(k);k=APAR[k];}
+      if(k<0)continue;
+      for(j=st_.length-1;j>=0;j--){var a_=st_[j],b_=APAR[a_],dx=PTS[a_*4]-PTS[b_*4],dy=PTS[a_*4+1]-PTS[b_*4+1],dz=PTS[a_*4+2]-PTS[b_*4+2];dd[a_]=dd[b_]+Math.sqrt(dx*dx+dy*dy+dz*dz);}
+    }
+    var lim=d.seg;
+    if(d.segTo){var mn=1e9;CURVES.forEach(function(c2){if(c2.e===d.segTo)for(var q2=c2.s;q2<c2.s+c2.c;q2++)if(dd[q2]>=0&&dd[q2]<mn)mn=dd[q2];});
+      if(mn<1e9)lim=Math.max(0.01,mn-d.segMargin);}
+    d.segLen=lim;
+    for(i=0;i<n;i++)if(occ[i]&&dd[i]>lim){occ[i]=0;rp[i]=1;}
+  }
+  for(c=0;c<CURVES.length;c++){cu=CURVES[c];
+    var sideOK=!d.side||cu.e.slice(-2)===d.side;
+    for(i=cu.s;i<cu.s+cu.c;i++){
+      if(occ[i]&&(!sideOK||(d.excl&&d.excl.test(cu.e))))occ[i]=0;
+      if(d.add&&!cu.v&&sideOK&&i!==cp&&d.add.test(cu.e))occ[i]=1;
+      if(occ[i]&&d.onlyOcc&&cu.e!==d.onlyOcc){occ[i]=0;rp[i]=1;}
+      o=i*7;
+      if(occ[i]){VATT[o+2]=-1;VATT[o+5]=0;continue;}
+      if(rp[i]){VATT[o]+=d.lag;VATT[o+1]*=1.2;VATT[o+2]*=d.amp;VATT[o+3]+=d.lag;VATT[o+5]*=d.amp;continue;}
+      /* Retour veineux laissé normal : on suppose un relais par le réseau collatéral, non dessiné */
+    }
+  }
+  if(!clotM){
+    clotM=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),new THREE.MeshStandardMaterial({color:0x3a1014,roughness:0.9}));
+    clotM.userData={info:'caillot',val:function(){return 0;},title:null};scene.add(clotM);pickOrgans.push(clotM);
+  }
+  /* Caillot au calibre de l'artère : ellipsoïde allongé dans l'axe du vaisseau, juste affleurant la paroi */
+  var q=cp*4,rr=PTS[q+3]*1.03,s0=cp,s1=cp;
+  for(c=0;c<CURVES.length;c++){cu=CURVES[c];if(cp>=cu.s&&cp<cu.s+cu.c){s0=Math.max(cu.s,cp-1);s1=Math.min(cu.s+cu.c-1,cp+1);break;}}
+  var dir=new THREE.Vector3(PTS[s1*4]-PTS[s0*4],PTS[s1*4+1]-PTS[s0*4+1],PTS[s1*4+2]-PTS[s0*4+2]);
+  if(dir.lengthSq()<1e-12)dir.set(0,1,0);dir.normalize();
+  clotM.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+  clotM.position.set(PTS[q],PTS[q+1],PTS[q+2]);clotM.scale.set(rr,Math.max(rr*3,0.008),rr);clotM.visible=true;
+  INFO.caillot=[d.title,d.text];
+  if(d.ov)buildOv(d,occ);
+}
+/* Territoire hypoperfusé : voile sombre sur l'organe, selon la distance aux branches occluses */
+var OV={};
+function buildOv(d,occ){
+  var org=null;organs.forEach(function(o){if(o.key===d.ov)org=o.mesh;});
+  if(!org)return;
+  var hp=[],i;for(i=0;i<occ.length;i++)if(occ[i]&&(d.yMin==null||PTS[i*4+1]>d.yMin))hp.push(PTS[i*4],PTS[i*4+1],PTS[i*4+2]);
+  var pos=org.geometry.attributes.position.array,nv=pos.length/3,w=new Float32Array(nv),sx=d.side==='.r'?-1:1;
+  for(i=0;i<nv;i++){var x=pos[i*3],y=pos[i*3+1],z=pos[i*3+2],m=1e9;
+    for(var j=0;j<hp.length;j+=3){var dx=x-hp[j],dy=y-hp[j+1],dz=z-hp[j+2],dd=dx*dx+dy*dy+dz*dz;if(dd<m)m=dd;}
+    var f=Math.max(0,Math.min(1,1-(Math.sqrt(m)-d.near)/d.far));
+    if(d.side)f*=Math.max(0,Math.min(1,(sx*x+0.002)/0.008));
+    w[i]=f;}
+  var ov=OV[d.ov];
+  if(!ov){
+    var g=new THREE.BufferGeometry();g.setAttribute('position',org.geometry.attributes.position);g.setIndex(org.geometry.index);
+    g.setAttribute('aW',new THREE.BufferAttribute(w,1));
+    ov=new THREE.Mesh(g,new THREE.ShaderMaterial({transparent:true,depthWrite:false,
+      vertexShader:'attribute float aW;varying float vW;void main(){vW=aW;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:'varying float vW;void main(){if(vW<0.02)discard;gl_FragColor=vec4(0.04,0.06,0.16,vW*0.8);}'}));
+    ov.renderOrder=4;organGroup.add(ov);OV[d.ov]=ov;
+  }else{ov.geometry.attributes.aW.array.set(w);ov.geometry.attributes.aW.needsUpdate=true;}
+}
+function setClot(i){
+  var d=CLOTS[i];CLOT=(i&&d)?d:null;
+  if(CLOT&&CLOT.pt==null)CLOT.pt=clotPoint(CLOT);
+  if(heart&&CLOT&&!(VIEW==='lung'&&CLOT.ov&&CLOT.ov.indexOf('lung')===0))setHeart(false);
+  hide();applySite(SITE.pi,SITE.label,SITE.ph,false);
+  st.t=0;if(!reduce)setPlaying(true);
+}
+CLOTS.forEach(function(d,i){var o=document.createElement('option');o.value=String(i);o.textContent=d.label;$('clot').appendChild(o);});
+$('clot').addEventListener('change',function(){setClot(parseInt(this.value,10)||0);});
+
+/* ---------- Chargement ---------- */
+function get(u,bin){return fetch(u).then(function(r){if(!r.ok)throw new Error(u+' '+r.status);return bin?r.text():r.json();}).then(function(d){
+  if(!bin)return d;
+  var s=atob(d.trim()),n=s.length,u8=new Uint8Array(n);for(var i=0;i<n;i++)u8[i]=s.charCodeAt(i);return u8.buffer;});}
+Promise.all([get('model.json',false),get('model.b64.txt',true)]).then(function(res){
+  buildModel(res[0],res[1]);params();
+  $('hint').textContent=HINT;$('hint').hidden=true;
+  var f0=Math.max(1,0.85/aspect);
+  if(!reduce){camera.position.set(1.15*f0,1.55,2.5*f0);controls.target.set(0,1.0,0);controls.update();}
+  camReady=true;setView();if(CAM)CAM.ms=2600;
+  startReveal(function(){if(!reduce)setPlaying(true);});
+  get('arttree.b64.txt',true).then(function(b){APAR=new Int32Array(b);if(APAR.length===PTS.length/4)$('clotRow').hidden=false;else APAR=null;}).catch(function(){});
+}).catch(function(e){
+  $('hint').textContent="Le modèle anatomique n'a pas pu se charger. Recharge la page.";
+  if(window.console)console.error(e);
+});
+
+buildDecor();resize();setView();sizeChart();params();
+requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
