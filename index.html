@@ -74,6 +74,13 @@ h1::before{content:"";width:9px;height:9px;border:1.5px solid var(--cy);border-r
 .views{position:relative;display:flex;flex-direction:column;align-items:flex-end}
 .menu{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:5px;min-width:168px;background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:8px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .menu .b{width:100%;text-align:left;justify-content:flex-start}
+.menu .mh{margin:4px 2px 0;font-family:var(--font-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.menu .mh:first-child{margin-top:0}
+.menu{max-height:calc(100vh - 76px);overflow-y:auto}
+.menu .vrow{display:flex;gap:5px}
+.menu .vrow .b{width:auto;flex:none;justify-content:center;min-width:36px;padding-left:0;padding-right:0}
+.menu .vrow #vesAll{flex:1 1 auto;justify-content:flex-start;padding-left:12px;padding-right:8px}
+@media (max-height:540px){.menu{display:grid;grid-template-columns:1fr 1fr;min-width:292px}.menu .mh{grid-column:1/-1}}
 #menuB{padding-inline:9px;font-size:11px}
 #menuB::after{content:"";display:inline-block;margin-left:8px;border:4px solid transparent;border-top-color:currentColor;transform:translateY(2px)}
 .astP{position:absolute;z-index:4;top:56px;right:var(--gr);max-width:min(300px,calc(100vw - 32px));background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
@@ -169,6 +176,12 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
   .app.full .panel{display:none}
 }
 @media (prefers-reduced-motion:reduce){button.b{transition:none}}
+/* Écran partagé (format large, coupe agrandie) : la coupe occupe toute la moitié gauche, le modèle la moitié droite */
+.stage .ax.side{left:0;top:0;bottom:0;width:50%;padding:0;gap:0;border:0;border-right:1px solid var(--line);border-radius:0;background:#000;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;align-items:center;justify-content:center}
+.stage .ax.side .axh{position:absolute;z-index:1;top:12px;left:var(--gl);right:12px}
+.stage .ax.side #axC{flex:none}
+.stage .ax.side #axY{position:absolute;z-index:1;bottom:8px;left:var(--gl);right:14px;width:auto}
+.stage.split .hud,.stage.split .hint,.stage.split .card{left:calc(50% + 14px)}
 </style>
 
 <div class="app">
@@ -185,12 +198,17 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
         <div class="views">
           <button class="b" id="menuB" type="button" aria-expanded="false" aria-controls="menu">Affichage</button>
           <div class="menu" id="menu" hidden>
-          <button class="b" id="view" type="button">Corps entier</button>
+          <p class="mh">Calques</p>
           <button class="b" id="skin" type="button" aria-pressed="true">Peau</button>
           <button class="b" id="org" type="button" aria-pressed="true">Organes</button>
-          <button class="b" id="ves" type="button" aria-pressed="true">Vaisseaux</button>
+          <div class="vrow"><button class="b" id="vesAll" type="button" aria-pressed="true">Vaisseaux</button><button class="b" id="art" type="button" aria-pressed="true" aria-label="Artères" title="Artères">A</button><button class="b" id="ves" type="button" aria-pressed="true" aria-label="Veines" title="Veines">V</button></div>
+          <button class="b" id="bone" type="button" aria-pressed="false">Os</button>
+          <p class="mh">Zones</p>
+          <button class="b" id="view" type="button">Corps entier</button>
+          <button class="b" id="head" type="button" aria-pressed="false">Crâne</button>
           <button class="b" id="heart" type="button" aria-pressed="false">Cœur</button>
           <button class="b" id="lung" type="button" aria-pressed="false">Poumons</button>
+          <p class="mh">Coupe</p>
           <button class="b" id="axB" type="button" aria-pressed="false">Coupe axiale</button>
           </div>
         </div>
@@ -240,7 +258,7 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
         <div><label for="v">Volume<output id="vv">90 mL</output></label><input type="range" id="v" min="40" max="150" step="5" value="90"></div>
         <div><label for="co">Débit card.<output id="cov">5,0 L/min</output></label><input type="range" id="co" min="2" max="9" step="0.5" value="5"></div>
       </div>
-      <div class="site"><button class="b" id="spl" type="button" aria-pressed="false">Split bolus</button><select id="splP" aria-label="Préréglage du split bolus" hidden><option value="">Préréglage…</option><option value="orl">ORL biphasique</option><option value="uro">Uroscanner split</option></select></div>
+      <div class="site"><button class="b" id="spl" type="button" aria-pressed="false">Split bolus</button><button class="b" id="flush" type="button" aria-pressed="true">Rinçage sérum</button><select id="splP" aria-label="Préréglage du split bolus" hidden><option value="">Préréglage…</option><option value="orl">ORL biphasique</option><option value="uro">Uroscanner split</option></select></div>
       <div class="params" id="splG" hidden>
         <div><label for="q2">Débit 2<output id="q2v">3,0 mL/s</output></label><input type="range" id="q2" min="1" max="6" step="0.5" value="3"></div>
         <div><label for="v2">Volume 2<output id="v2v">50 mL</output></label><input type="range" id="v2" min="20" max="120" step="5" value="50"></div>
@@ -278,22 +296,42 @@ function as2(fn,t){var q=P.Q,v=P.V;P.Q=SPL.Q;P.V=SPL.V;var r=fn(t);P.Q=q;P.V=v;r
 function EV(fn,t){return fn(t)+((SPL.on&&t>SPL.t0)?as2(fn,t-SPL.t0):0);}
 function tmaxN(){return SPL.on?Math.max(300,Math.ceil((SPL.t0+SPL.V/SPL.Q+160)/10)*10):300;}
 function amp(){return Math.min(1.5,(P.Q/3)*Math.pow(kk(),0.7));}
-function pass(t,d,sig){var s=sig*1.414;return 0.5*(erf((t-d)/s)-erf((t-d-dur())/s));}
-function rec(t,d){return 0.2*(P.V/90)*sg((t-d-dur()/2-25*kk())/10)*Math.exp(-Math.max(0,t-90)/450);}
+/* Rinçage au sérum physiologique. Sans rinçage, tout le produit entre dans le patient mais les 15 derniers mL
+   stagnent dans les veines du bras : le bolus compact qui atteint le cœur est raccourci d'autant. */
+var FLUSH=true,FLOSS=15;
+function durC(){return FLUSH?dur():Math.max(2,(P.V-FLOSS)/P.Q);}
+function pass(t,d,sig,full){var s=sig*1.414;return 0.5*(erf((t-d)/s)-erf((t-d-(full?dur():durC()))/s));}
+/* traîne dans les veines d'injection : pleine dans le bras, faible au-delà (le sang des autres territoires la dilue) */
+function stag(t,x,d,sig){
+  if(FLUSH)return 0;var u=Math.max(0,Math.min(1,(x-0.8*SITE.P)/(0.4*SITE.P))),w=1-0.8*u*u*(3-2*u),te=t-d-dur();
+  return w*0.5*(1+erf(te/(sig*1.414)))*Math.exp(-Math.max(0,te)/(37.4*3/Math.max(3,P.Q)));
+}
+function rec(t,d){return 0.2*(P.V/90)*sg((t-d-dur()/2-25*kk())/10)*Math.exp(-Math.max(0,t-90)/100);}
 function ves(t,d,sig,a,undil){
   var A=undil?Math.min(1.5,P.Q/3*1.3):amp()*a, dd=delay(d);
   return A*pass(t,dd,sig*kk())+rec(t,dd);
 }
 function exc(t,d){return 0.95*Math.min(1.2,P.V/90)*sg((t-delay(d))/22);}
 function liver(t){return 0.2*amp()*pass(t,delay(23),6*kk())+ves(t,54,15,0.8);}
-function kidney(t){return Math.max(0.85*ves(t,21.5,4,1),ves(t,58,18,0.95));}
+/* Rein. Cortex : un seul pic au temps artériel, puis un plateau néphrographique qui décroît lentement.
+   Médullaire : part de 15 % du cortex et le rejoint à 75 s (débit cardiaque normal) ; ensuite le rein reste homogène. */
+function kidney(t){
+  var d=delay(21.5),art=0.85*ves(t,21.5,4,1);
+  var plat=0.85*Math.min(1.2,P.V/90)*sg((t-d-dur()/3)/5)*Math.exp(-Math.max(0,t-90)/200);
+  return Math.max(art,plat);
+}
+function kidMed(t){
+  var d=delay(21.5),k=kk(),u=Math.max(0,Math.min(1,(t-d-6*k)/(47.5*k)));
+  return kidney(t)*(0.15+0.85*u*u*(3-2*u));
+}
 /* même calcul que le shader des vaisseaux, pour l'affichage chiffré */
 function vesAttr(t,a,o){
   if(a[o+2]<0)return 0;
   var K=a[o+6];
   if(K>2.5&&K<3.5)return exc(t,a[o]);
   var k=kk(),d1=K>9.5?raw(a[o]):delay(a[o]),a1=K>9.5?Math.min(1.5,P.Q/3*1.3):amp()*a[o+2];
-  var e=a1*pass(t,d1,a[o+1]*k);
+  var e=a1*pass(t,d1,a[o+1]*k,K>9.5);
+  if(K>9.5)e+=a1*stag(t,a[o],d1,a[o+1]*k);
   if(a[o+5]>0)e+=amp()*a[o+5]*pass(t,delay(a[o+3]),a[o+4]*k);
   return e+rec(t,d1);
 }
@@ -408,15 +446,21 @@ var OCOL={lungR:0x3fa9d6,lungL:0x3fa9d6,ra:0x3f74ea,rv:0x3f74ea,pt:0x3f74ea,la:0
 var GVS='varying vec3 vN;varying vec3 vV;varying vec3 vP;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vP=position;gl_Position=projectionMatrix*mv;}';
 function organMat(col,op){
   return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.FrontSide,
-    uniforms:{uCol:{value:new THREE.Color(col)},uHot:{value:HOT},uE:{value:0},uOp:{value:op},uDm:{value:1},uRev:UREV},
+    uniforms:{uCol:{value:new THREE.Color(col)},uHot:{value:HOT},uE:{value:0},uOp:{value:op},uDm:{value:1},uRev:UREV,uLay:{value:0},uLvl:{value:-10},uCM:{value:0},uE2:{value:0}},
     vertexShader:GVS,
-    fragmentShader:['uniform vec3 uCol,uHot;uniform float uE,uOp,uDm,uRev;varying vec3 vN;varying vec3 vV;varying vec3 vP;',
+    fragmentShader:['uniform vec3 uCol,uHot;uniform float uE,uOp,uDm,uRev,uLay,uLvl,uCM,uE2;varying vec3 vN;varying vec3 vV;varying vec3 vP;',
      'void main(){',
      ' if(vP.y>uRev)discard;',
      ' float ndv=abs(dot(normalize(vN),normalize(vV)));float f=pow(1.0-ndv,2.2);',
+     ' float eL=uE;',
+     /* vessie : l'urine opacifiée, plus dense, se dépose en arrière (patient couché sur le dos) */
+     /* rein : la périphérie (vue rasante) figure le cortex, le centre (vu de face, à travers le verre) la médullaire */
+     ' if(uCM>0.5)eL=mix(uE2,uE,smoothstep(0.25,0.8,1.0-ndv));',
+     ' if(uLay>0.5)eL=vP.z<uLvl?min(1.0,uE*1.25+0.15):uE*0.08;',
      ' vec3 c=uCol*(0.30+0.55*ndv)+uCol*f*1.1;',
-     ' c=mix(c,uHot*(0.60+0.40*ndv)+vec3(1.0)*f*0.3,uE*0.8);',
-     ' float a=uOp*0.55+f*0.45+uE*0.22;',
+     ' c=mix(c,uHot*(0.60+0.40*ndv)+vec3(1.0)*f*0.3,eL*0.8);',
+     ' float a=uOp*0.55+f*0.45+eL*0.22;',
+     ' if(uLay>0.5)c+=uHot*0.9*exp(-pow((vP.z-uLvl)/0.0015,2.0));',
      ' c*=mix(0.45,1.0,uDm);a*=mix(0.5,1.0,uDm);',
      ' c+=vec3(0.3,0.9,1.0)*exp(-pow((uRev-vP.y)/0.012,2.0));',
      ' gl_FragColor=vec4(c,clamp(a,0.0,0.94));',
@@ -442,41 +486,47 @@ var skinMat=new THREE.ShaderMaterial({
 
 var VS=[
 'uniform float uT,uQ,uV,uCO,uSel,uP,uSh,uDim,uInfl;',
-'attribute vec3 aA;attribute vec3 aB;attribute float aK;attribute float aC;attribute float aT;attribute float aH;attribute float aR;',
+'attribute float aV;varying float vAV;attribute vec3 aA;attribute vec3 aB;attribute float aK;attribute float aC;attribute float aT;attribute float aH;attribute float aR;',
 'varying float vE;varying vec3 vN;varying float vK;varying float vS;varying vec3 vP;varying float vD;varying float vH;varying float vPh;varying vec3 vV;',
-'uniform float uS2,uT2,uQ2,uV2;',
+'uniform float uS2,uT2,uQ2,uV2,uFl;',
 'float kk_;float dur_;float T_;float Q_;float V_;',
 'float erf_(float x){float s=sign(x);x=abs(x);float t=1.0/(1.0+0.3275911*x);',
 ' float y=1.0-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*exp(-x*x);return s*y;}',
 'float sg_(float x){return 1.0/(1.0+exp(-clamp(x,-30.0,30.0)));}',
 'float dly(float d){float af=pow(3.0/Q_,0.4);return d<=uP?d*af*kk_:(uP*af+(d-uP))*kk_;}',
-'float pass_(float d,float sig){float s=sig*1.414;return 0.5*(erf_((T_-d)/s)-erf_((T_-d-dur_)/s));}',
+'float pass_(float d,float sig,float du){float s=sig*1.414;return 0.5*(erf_((T_-d)/s)-erf_((T_-d-du)/s));}',
 'float enh(){',
 ' if(aA.z<0.0)return 0.0;',
 ' dur_=V_/Q_;float amp=min(1.5,(Q_/3.0)*pow(kk_,0.7));float e;',
 ' if(aK>2.5&&aK<3.5){e=0.95*min(1.2,V_/90.0)*sg_((T_-dly(aA.x+uSh))/22.0);}',
 ' else{',
 '  float d1=aK>9.5?dly(aA.x):dly(aA.x+uSh);float a1=aK>9.5?min(1.5,Q_/3.0*1.3):amp*aA.z;',
-'  e=a1*pass_(d1,aA.y*kk_);',
-'  if(aB.z>0.0)e+=amp*aB.z*pass_(dly(aB.x+uSh),aB.y*kk_);',
-'  e+=0.2*(V_/90.0)*sg_((T_-d1-dur_/2.0-25.0*kk_)/10.0)*exp(-max(0.0,T_-90.0)/450.0);',
+'  float dc=uFl>0.5?dur_:max(2.0,(V_-15.0)/Q_);',
+'  e=a1*pass_(d1,aA.y*kk_,aK>9.5?dur_:dc);',
+/* sans rinçage : la fin du bolus stagne dans les veines du bras et se vide lentement */
+'  if(aK>9.5&&uFl<0.5){float te=T_-d1-dur_;float w=1.0-0.8*smoothstep(0.8*uP,1.2*uP,aA.x);',
+'   e+=a1*w*0.5*(1.0+erf_(te/(aA.y*kk_*1.414)))*exp(-max(0.0,te)/(37.4*3.0/max(3.0,Q_)));}',
+'  if(aB.z>0.0)e+=amp*aB.z*pass_(dly(aB.x+uSh),aB.y*kk_,dc);',
+'  e+=0.2*(V_/90.0)*sg_((T_-d1-dur_/2.0-25.0*kk_)/10.0)*exp(-max(0.0,T_-90.0)/100.0);',
 ' }',
 ' return e;}',
 'void main(){',
 ' kk_=5.0/uCO;T_=uT;Q_=uQ;V_=uV;float e=enh();',
 ' if(uS2>0.5&&uT>uT2){T_=uT-uT2;Q_=uQ2;V_=uV2;e+=enh();}',
-' vE=clamp(e,0.0,1.0);vK=aK;vS=abs(aC-uSel)<0.5?1.0:0.0;vD=1.0-uDim*(1.0-aT)*0.7;vH=aH;',
+' vE=clamp(e,0.0,1.0);vK=aK;vS=abs(aC-uSel)<0.5?1.0:0.0;vD=1.0-uDim*(1.0-aT)*0.7;vH=aH;vAV=aV;',
 ' vN=normalize(normalMatrix*normal);vP=position;vPh=aA.x;',
 ' vec3 pos=position+normal*(uInfl*(0.0012+0.7*aR));vec4 mv=modelViewMatrix*vec4(pos,1.0);vV=normalize(-mv.xyz);',
 ' gl_Position=projectionMatrix*mv;',
 '}'].join('\n');
-var FSH0='varying float vE;varying vec3 vN;varying float vK;varying float vS;varying vec3 vP;varying float vD;varying float vH;varying float vPh;varying vec3 vV;';
+/* Calques Artères et Veines : une veine est un vaisseau marqué veineux dans l'atlas, plus les veines pulmonaires, la veine porte et les jugulaires */
+function VEINK(c){return c.v===1||c.k==='vp'||c.k==='porte'||c.k==='jug';}
+var FSH0='varying float vAV;varying float vE;varying vec3 vN;varying float vK;varying float vS;varying vec3 vP;varying float vD;varying float vH;varying float vPh;varying vec3 vV;';
 var FS=[
-'uniform vec3 uHot,uVein,uArt,uPort,uUr;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowU;',
+'uniform vec3 uHot,uVein,uArt,uPort,uUr;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowA,uShowU;',
 FSH0,
 'void main(){',
 ' if(vP.y>uRev)discard;',
-' if((vK>2.5&&vK<3.5)?uShowU<0.5:uShowV<0.5)discard;',
+' if((vK>2.5&&vK<3.5)?uShowU<0.5:(vAV>0.5?uShowV<0.5:uShowA<0.5))discard;',
 ' if(uFoc.w>0.0&&(vH<0.5||distance(vP,uFoc.xyz)>uFoc.w))discard;',
 ' vec3 base=(vK<0.5||vK>9.5)?uVein:(vK<1.5?uArt:(vK<2.5?uPort:uUr));',
 ' float ndv=abs(dot(normalize(vN),normalize(vV)));float rim=pow(1.0-ndv,1.5);',
@@ -492,11 +542,11 @@ FSH0,
 '}'].join('\n');
 /* Halo : même géométrie légèrement gonflée, en additif, proportionnel au rehaussement */
 var FSG=[
-'uniform vec3 uHot;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowU;',
+'uniform vec3 uHot;uniform vec4 uFoc;uniform float uTime,uRev,uWave,uShowV,uShowA,uShowU;',
 FSH0,
 'void main(){',
 ' if(vP.y>uRev)discard;',
-' if((vK>2.5&&vK<3.5)?uShowU<0.5:uShowV<0.5)discard;',
+' if((vK>2.5&&vK<3.5)?uShowU<0.5:(vAV>0.5?uShowV<0.5:uShowA<0.5))discard;',
 ' if(uFoc.w>0.0&&(vH<0.5||distance(vP,uFoc.xyz)>uFoc.w))discard;',
 ' float ndv=abs(dot(normalize(vN),normalize(vV)));',
 ' float band=0.5+0.5*uWave*sin(6.2831*(vPh*0.85-uTime*1.5));',
@@ -515,7 +565,7 @@ function buildVessels(PT,AT,curves){
     for(i=0;i<c.c;i++){var r=PT[(c.s+i)*4+3];if(r>mr)mr=r;}
     var s=mr<0.0012?4:(mr<0.004?6:8);sides[ci]=s;nv+=c.c*s;ni+=(c.c-1)*s*6;}
   var pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),aA=new Float32Array(nv*3),aB=new Float32Array(nv*3),
-      aK=new Float32Array(nv),aC=new Float32Array(nv),aT=new Float32Array(nv).fill(1),aH=new Float32Array(nv),aR=new Float32Array(nv),idx=new Uint32Array(ni);
+      aK=new Float32Array(nv),aVn=new Float32Array(nv),aC=new Float32Array(nv),aT=new Float32Array(nv).fill(1),aH=new Float32Array(nv),aR=new Float32Array(nv),idx=new Uint32Array(ni);
   VC=new Uint16Array(nv);PVB=new Uint32Array(PT.length/4);PSD=new Uint8Array(PT.length/4);
   var vo=0,io=0,t=[0,0,0],nx,ny,nz,bx,by,bz;
   for(ci=0;ci<n;ci++){
@@ -536,7 +586,7 @@ function buildVessels(PT,AT,curves){
         nor[o]=dx;nor[o+1]=dy;nor[o+2]=dz;
         aA[o]=AT[a];aA[o+1]=AT[a+1];aA[o+2]=AT[a+2];
         aB[o]=AT[a+3];aB[o+1]=AT[a+4];aB[o+2]=AT[a+5];
-        aK[vo]=AT[a+6];aC[vo]=ci;aR[vo]=rr;VC[vo]=ci;vo++;
+        aK[vo]=AT[a+6];aVn[vo]=VEINK(c)?1:0;aC[vo]=ci;aR[vo]=rr;VC[vo]=ci;vo++;
       }
     }
     for(i=0;i<c.c-1;i++)for(j=0;j<s;j++){
@@ -551,6 +601,7 @@ function buildVessels(PT,AT,curves){
   g.setAttribute('aB',new THREE.BufferAttribute(aB,3));
   g.setAttribute('aK',new THREE.BufferAttribute(aK,1));
   g.setAttribute('aC',new THREE.BufferAttribute(aC,1));
+  g.setAttribute('aV',new THREE.BufferAttribute(aVn,1));
   g.setAttribute('aT',new THREE.BufferAttribute(aT,1));
   g.setAttribute('aH',new THREE.BufferAttribute(aH,1));
   g.setAttribute('aR',new THREE.BufferAttribute(aR,1));
@@ -558,9 +609,9 @@ function buildVessels(PT,AT,curves){
   g.setIndex(new THREE.BufferAttribute(idx,1));
   g.computeBoundingSphere();g.computeBoundingBox();
   vesMat=new THREE.ShaderMaterial({side:THREE.DoubleSide,vertexShader:VS,fragmentShader:FS,uniforms:{
-    uFoc:{value:new THREE.Vector4(0,0,0,0)},uS2:{value:0},uT2:{value:90},uQ2:{value:3},uV2:{value:50},uDim:{value:0},uT:{value:0},uP:{value:4.6},uSh:{value:0},uQ:{value:P.Q},uV:{value:P.V},uCO:{value:P.CO},uSel:{value:-1},
+    uFoc:{value:new THREE.Vector4(0,0,0,0)},uFl:{value:1},uS2:{value:0},uT2:{value:90},uQ2:{value:3},uV2:{value:50},uDim:{value:0},uT:{value:0},uP:{value:4.6},uSh:{value:0},uQ:{value:P.Q},uV:{value:P.V},uCO:{value:P.CO},uSel:{value:-1},
     uHot:{value:HOT},uVein:{value:new THREE.Color(0x2a63d8)},uArt:{value:new THREE.Color(0xcf2f4c)},
-    uPort:{value:new THREE.Color(0x8150d8)},uUr:{value:new THREE.Color(0x4f6a86)},uTime:UT,uRev:UREV,uWave:{value:0},uShowV:{value:1},uShowU:{value:1},uInfl:{value:0}}});
+    uPort:{value:new THREE.Color(0x8150d8)},uUr:{value:new THREE.Color(0x4f6a86)},uTime:UT,uRev:UREV,uWave:{value:0},uShowV:{value:1},uShowA:{value:1},uShowU:{value:1},uInfl:{value:0}}});
   vesMesh=new THREE.Mesh(g,vesMat);scene.add(vesMesh);
   var hu={};for(var un in vesMat.uniforms)hu[un]=vesMat.uniforms[un];hu.uInfl={value:1};
   haloMesh=new THREE.Mesh(g,new THREE.ShaderMaterial({side:THREE.FrontSide,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,vertexShader:VS,fragmentShader:FSG,uniforms:hu}));
@@ -694,6 +745,7 @@ controls.addEventListener('start',function(){CAM=null;});
 /* ---------- Vue ---------- */
 var whole=false,aspect=1,camReady=false;
 function setView(){
+  if(AX&&AX.split){splitCam(camReady?800:0);return;}
   var f=Math.max(1,0.85/aspect);
   var ms=camReady?1000:0;
   if(whole)camTo(0,0.92,2.75*f,0,0.87,0,ms);else camTo(0,1.24,1.75*f,0,1.2,0,ms);
@@ -701,6 +753,7 @@ function setView(){
 function resize(){
   var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
   aspect=w/h;renderer.setSize(w,h,false);camera.aspect=aspect;camera.updateProjectionMatrix();
+  if(AX)layoutAx();
 }
 var firstSize=true;
 new ResizeObserver(function(){resize();if(firstSize){firstSize=false;setView();}sizeChart();}).observe(stage);
@@ -716,6 +769,7 @@ function sizeChart(){
 }
 function curveSet(){
   if(VIEW==='lung')return [['Artère pulmonaire',paF],['Veines pulmonaires',pvF],['Ventricule gauche',FN.lv]];
+  if(VIEW==='head')return [['Carotides',carF],['Jugulaires',jugF],['Cerveau',FN.brain]];
   if(heart)return [['Ventricule droit',FN.rv],['Ventricule gauche',FN.lv],['Aorte et coronaires',function(t){return ves(t,16.3,3.4,1);}]];
   if(PR)return PR.cur;
   return [['Artère pulmonaire',paF],['Aorte',aortaF],['Foie',liver]];
@@ -815,6 +869,16 @@ function drawChart(t){
 var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var st={t:reduce?32:0,playing:false,speed:3};
 var selected=null,heart=false,VIEW=null;
+/* Niveau du produit dans la vessie, en profondeur (z), depuis la paroi postérieure */
+var BLZ=null;
+/* la couche monte avec le temps depuis le début de l'excrétion, et remplit toute la vessie vers 10 min */
+function bladderLevel(e,t){
+  if(!BLZ){var b=null;organs.forEach(function(o){if(o.key==='bladder')b=o.mesh;});if(!b)return -10;
+    b.geometry.computeBoundingBox();BLZ=[b.geometry.boundingBox.min.z,b.geometry.boundingBox.max.z];}
+  if(e<0.01)return -10;
+  var t0=delay(170),f=Math.max(0,Math.min(1,(t-t0)/(600-t0)));
+  return BLZ[0]+(BLZ[1]-BLZ[0])*(0.06+0.97*Math.pow(f,0.5));
+}
 function clamp01(x){return x<0?0:(x>1?1:x);}
 function paint(t){
   if(vesMat)vesMat.uniforms.uT.value=t;
@@ -822,6 +886,8 @@ function paint(t){
     var og=organs[k],ev=clamp01(EV(og.fn,t))*(OCCO[og.key]!=null?OCCO[og.key]:1);
     var dm=(PR&&!heart&&!PR.org[og.key])?0.4:1;
     og.mat.uniforms.uE.value=ev;og.mat.uniforms.uDm.value=dm;
+    if(og.key==='kidR'||og.key==='kidL'){og.mat.uniforms.uCM.value=1;og.mat.uniforms.uE2.value=clamp01(EV(kidMed,t))*(OCCO[og.key]!=null?OCCO[og.key]:1);}
+    if(og.key==='bladder'){og.mat.uniforms.uLay.value=1;og.mat.uniforms.uLvl.value=bladderLevel(ev,t);}
   }
   var injOn=t<dur()||(SPL.on&&t>=SPL.t0&&t<SPL.t0+SPL.V/SPL.Q);
   for(var ok in OV)OV[ok].visible=!!(CLOT&&CLOT.ov===ok&&(!heart||VIEW==='lung'));
@@ -853,13 +919,22 @@ function setSpeed(v){st.speed=v;
   Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(o){o.setAttribute('aria-pressed',(+o.dataset.s===v)?'true':'false');});}
 Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(b){b.addEventListener('click',function(){setSpeed(+b.dataset.s);});});
 $('skin').addEventListener('click',function(){if(!skinMesh)return;skinMesh.visible=!skinMesh.visible;this.setAttribute('aria-pressed',skinMesh.visible?'true':'false');});
-/* Les uretères suivent le bouton Organes, le reste du réseau le bouton Vaisseaux */
+/* Les uretères suivent le bouton Organes, le reste du réseau les boutons Artères et Veines */
 function syncVes(){if(!vesMesh)return;var u=vesMat.uniforms;u.uShowU.value=organGroup.visible?1:0;
-  vesMesh.visible=haloMesh.visible=(u.uShowV.value>0.5||u.uShowU.value>0.5);}
+  vesMesh.visible=haloMesh.visible=(u.uShowV.value>0.5||u.uShowA.value>0.5||u.uShowU.value>0.5);
+  $('vesAll').setAttribute('aria-pressed',(u.uShowV.value>0.5||u.uShowA.value>0.5)?'true':'false');}
 $('org').addEventListener('click',function(){organGroup.visible=!organGroup.visible;this.setAttribute('aria-pressed',organGroup.visible?'true':'false');syncVes();});
-$('ves').addEventListener('click',function(){if(!vesMesh)return;var u=vesMat.uniforms,on=u.uShowV.value<0.5;u.uShowV.value=on?1:0;syncVes();
+[['ves','uShowV',true],['art','uShowA',false]].forEach(function(d){$(d[0]).addEventListener('click',function(){
+  if(!vesMesh)return;var u=vesMat.uniforms,on=u[d[1]].value<0.5;u[d[1]].value=on?1:0;syncVes();
   this.setAttribute('aria-pressed',on?'true':'false');
-  if(!on&&u.uSel.value>=0&&CURVES[u.uSel.value].k!=='urine')hide();});
+  if(!on&&u.uSel.value>=0){var c=CURVES[u.uSel.value];if(c.k!=='urine'&&VEINK(c)===d[2])hide();}
+});});
+/* Vaisseaux : allume ou éteint les deux réseaux d'un coup ; A et V règlent chacun le sien */
+$('vesAll').addEventListener('click',function(){
+  if(!vesMesh)return;var u=vesMat.uniforms,on=!(u.uShowV.value>0.5||u.uShowA.value>0.5);
+  u.uShowV.value=u.uShowA.value=on?1:0;$('ves').setAttribute('aria-pressed',on?'true':'false');$('art').setAttribute('aria-pressed',on?'true':'false');syncVes();
+  if(!on&&u.uSel.value>=0&&CURVES[u.uSel.value].k!=='urine')hide();
+});
 /* Vue Cœur : zoom sur le cœur, le reste est masqué, la timeline se resserre sur la première minute */
 var HKEYS={ra:1,rv:1,la:1,lv:1,pt:1},HC=null,HR=0.09,prevSpeed=3,skinWas=true;
 function heartCenter(){
@@ -875,30 +950,40 @@ function lungCenter(){
   organs.forEach(function(o){if(o.key==='lungR'||o.key==='lungL'){o.mesh.geometry.computeBoundingSphere();c.add(o.mesh.geometry.boundingSphere.center);n++;}});
   if(!n)return null;LC=c.multiplyScalar(1/n);return LC;
 }
+/* Vue Crâne : artères et veines de la tête et du cou, avec le cerveau */
+var HDKEYS={brain:1},HDC=null,HDR=0.3;
+function HEADV(c){return c.k==='acerv'||c.k==='vtete'||c.k==='jug'||c.k==='tsa';}
+function headCenter(){
+  if(HDC)return HDC;var c=null;
+  organs.forEach(function(o){if(o.key==='brain'){o.mesh.geometry.computeBoundingSphere();c=o.mesh.geometry.boundingSphere.center.clone();}});
+  HDC=c;return HDC;
+}
 function setFocusFlags(mode){
-  var at=vesMesh.geometry.attributes.aH,arr=at.array,f=mode==='lung'?LUNGV:HEARTV,memo={};
+  var at=vesMesh.geometry.attributes.aH,arr=at.array,f=mode==='lung'?LUNGV:mode==='head'?HEADV:HEARTV,memo={};
   for(var k=0;k<arr.length;k++){var ci=VC[k];if(memo[ci]==null)memo[ci]=f(CURVES[ci])?1:0;arr[k]=memo[ci];}
   at.needsUpdate=true;
 }
 function setHeart(v,mode){
   mode=mode||'heart';
-  if(!vesMat)return;var c=mode==='lung'?lungCenter():heartCenter();if(!c)return;
+  if(!vesMat)return;var c=mode==='lung'?lungCenter():mode==='head'?headCenter():heartCenter();if(!c)return;
   if(v&&PR)setProto(0);
   var was=heart;
   heart=v;VIEW=v?mode:null;
   $('heart').setAttribute('aria-pressed',VIEW==='heart'?'true':'false');
   $('lung').setAttribute('aria-pressed',VIEW==='lung'?'true':'false');
-  var keys=mode==='lung'?LKEYS:HKEYS;
+  $('head').setAttribute('aria-pressed',VIEW==='head'?'true':'false');
+  var keys=mode==='lung'?LKEYS:mode==='head'?HDKEYS:HKEYS;
   organs.forEach(function(o){o.mesh.visible=!v||!!keys[o.key];});
   if(v&&!was)skinWas=skinMesh.visible;
   skinMesh.visible=v?false:skinWas;
   $('skin').setAttribute('aria-pressed',skinMesh.visible?'true':'false');
   if(v)setFocusFlags(mode);
-  vesMat.uniforms.uFoc.value.set(c.x,c.y,c.z,v?(mode==='lung'?1.0:HR):0);
+  vesMat.uniforms.uFoc.value.set(c.x,c.y,c.z,v?(mode==='lung'?1.0:mode==='head'?HDR:HR):0);
   if(v){
     if(pickMode)setPick(false);hide();
     var f=Math.max(1,0.85/aspect);
-    if(mode==='lung')camTo(c.x,c.y+0.02,c.z+0.95*f,c.x,c.y,c.z,1100);else camTo(c.x+0.05,c.y+0.03,c.z+0.46*f,c.x,c.y,c.z,1100);
+    if(mode==='head')camTo(c.x+0.08,c.y-0.03,c.z+0.78*f,c.x,c.y-0.08,c.z,1100);
+    else if(mode==='lung')camTo(c.x,c.y+0.02,c.z+0.95*f,c.x,c.y,c.z,1100);else camTo(c.x+0.05,c.y+0.03,c.z+0.46*f,c.x,c.y,c.z,1100);
     if(!was)prevSpeed=st.speed;setSpeed(1);TMAX=60;XP=1;st.t=0;if(!reduce)setPlaying(true);
     $('view').textContent='Vue générale';
   }else{
@@ -909,6 +994,7 @@ function setHeart(v,mode){
 }
 $('heart').addEventListener('click',function(){if(VIEW==='heart')setHeart(false);else setHeart(true,'heart');setMenu(false);});
 $('lung').addEventListener('click',function(){if(VIEW==='lung')setHeart(false);else setHeart(true,'lung');setMenu(false);});
+$('head').addEventListener('click',function(){if(VIEW==='head')setHeart(false);else setHeart(true,'head');setMenu(false);});
 var appEl=document.querySelector('.app'),fullB=$('full');
 function setFull(v){appEl.classList.toggle('full',v);fullB.setAttribute('aria-label',v?'Quitter le plein écran':'Plein écran');
   $('fullP').setAttribute('d',v?'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5':'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');}
@@ -944,7 +1030,7 @@ function params(){
   buildCurves();lastPhase='';
 }
 ['q','v','co'].forEach(function(id){$(id).addEventListener('input',params);});
-function durText(){$('dur').textContent="Durée d'injection : "+Math.round(dur())+' s'+(SPL.on?' + '+Math.round(SPL.V/SPL.Q)+' s':'');}
+function durText(){$('dur').textContent="Durée d'injection : "+Math.round(dur())+' s'+(SPL.on?' + '+Math.round(SPL.V/SPL.Q)+' s':'')+(FLUSH?'':' · sans rinçage, '+FLOSS+' mL stagnent dans le bras');}
 function applySplit(){
   SPL.Q=+$('q2').value;SPL.V=+$('v2').value;SPL.t0=+$('t2').value;
   $('q2v').textContent=fr(SPL.Q,1)+' mL/s';$('v2v').textContent=SPL.V+' mL';$('t2v').textContent=SPL.t0+' s';
@@ -965,6 +1051,11 @@ var SPLP={
   uro:{q:2,v:40,q2:3,v2:80,t2:480,acq:555}
 };
 $('spl').addEventListener('click',function(){setSplit(!SPL.on);});
+$('flush').addEventListener('click',function(){
+  FLUSH=!FLUSH;this.setAttribute('aria-pressed',FLUSH?'true':'false');
+  if(vesMat)vesMat.uniforms.uFl.value=FLUSH?1:0;
+  durText();buildCurves();lastPhase='';
+});
 $('splP').addEventListener('change',function(){
   var k=SPLP[this.value];if(!k)return;
   $('q').value=k.q;$('v').value=k.v;$('q2').value=k.q2;$('v2').value=k.v2;$('t2').value=k.t2;
@@ -983,9 +1074,10 @@ var cv=renderer.domElement;
 function cast(px,py,r){
   ndc.set(((px-r.left)/r.width)*2-1,-((py-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
   var hv=(vesMesh&&vesMesh.visible)?ray.intersectObject(vesMesh,false):[];
-  if(vesMesh){var su=vesMat.uniforms;hv=hv.filter(function(h){return CURVES[VC[h.face.a]].k==='urine'?su.uShowU.value>0.5:su.uShowV.value>0.5;});}
+  if(vesMesh){var su=vesMat.uniforms;hv=hv.filter(function(h){var c=CURVES[VC[h.face.a]];return c.k==='urine'?su.uShowU.value>0.5:(VEINK(c)?su.uShowV.value>0.5:su.uShowA.value>0.5);});}
   if(VIEW==='heart'&&HC)hv=hv.filter(function(h){return h.point.distanceTo(HC)<=HR&&HEARTV(CURVES[VC[h.face.a]]);});
   else if(VIEW==='lung')hv=hv.filter(function(h){return LUNGV(CURVES[VC[h.face.a]]);});
+  else if(VIEW==='head'&&HDC)hv=hv.filter(function(h){return h.point.distanceTo(HDC)<=HDR&&HEADV(CURVES[VC[h.face.a]]);});
   var ho=ray.intersectObjects(pickOrgans.filter(function(o){return o.visible&&(organGroup.visible||o.userData.info==='inj');}),false);
   return {v:hv.length?hv[0]:null,o:ho.length?ho[0]:null};
 }
@@ -1058,12 +1150,12 @@ var AX={on:false,y:1.26,skin:null,org:null,dots:null,caps:null,dirty:true,plane:
 /* Densités en UH : [sans injection, gain au premier passage, gain à l'équilibre]. Fenêtre TAP W350 / L50.
    Calées sur des coupes réelles sans injection et en portal (foie +55 UH, rate et vaisseaux ~120-160 UH au portal). */
 var AXH={lungR:[-850,40,0],lungL:[-850,40,0],ra:[40,260,90],rv:[40,260,90],la:[40,260,90],lv:[40,260,90],pt:[40,260,90],
-  liver:[54,90,20],spleen:[46,110,75],pancreas:[40,90,55],kidR:[30,170,60],kidL:[30,170,60],pelvR:[8,800,0],pelvL:[8,800,0],bladder:[8,800,0],
+  liver:[54,90,20],spleen:[46,110,75],pancreas:[40,90,55],kidR:[30,170,0],kidL:[30,170,0],pelvR:[8,800,0],pelvL:[8,800,0],bladder:[8,800,0],
   stomach:[25,45,30],duodenum:[25,45,30],colon:[20,40,25],jejunum:[25,45,30],brain:[34,18,4]};
 var AXBLOOD=[40,260,90],AXMUS=[50,0,12],AXFAT=-100,AXVISC=-55,AXSKIN=45;
 function win(hu){return gray((hu+125)/350*255);}
 /* Composante d'équilibre (produit redistribué dans le secteur extracellulaire), au-delà du premier passage */
-function eqR(t){return (P.V/90)/(1+Math.exp(-((t-delay(16)-dur()/2-25*kk())/10)))*Math.exp(-Math.max(0,t-90)/450);}
+function eqR(t){return (P.V/90)/(1+Math.exp(-((t-delay(16)-dur()/2-25*kk())/10)))*Math.exp(-Math.max(0,t-90)/100);}
 var AXORD=['stomach','colon','duodenum','jejunum','lungR','lungL','liver','spleen','pancreas','kidR','kidL','brain','pelvR','pelvL','bladder','pt','rv','ra','la','lv'];
 /* Intersection d'un maillage avec le plan y : segments chaînés en contours */
 function sliceMesh(geo,y,bridge){return sliceCore(geo.attributes.position.array,geo.index.array,y,bridge,0,geo.index.array.length);}
@@ -1137,6 +1229,26 @@ function hullOf(loops){
 }
 /* Os et muscles : chargés à la première ouverture de la coupe, jamais affichés en 3D */
 var AXD=null;
+/* Os en 3D : c'est le maillage de la coupe axiale, chargé au premier clic */
+var BM={bone:{on:false,mesh:null,col:[0.86,0.92,0.97],a:[0.10,0.80],p:1.6}};
+function bmMat(c){
+  return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,
+    uniforms:{uC:{value:new THREE.Vector3(c.col[0],c.col[1],c.col[2])},uA:{value:new THREE.Vector2(c.a[0],c.a[1])},uP:{value:c.p}},
+    vertexShader:'varying vec3 vN;varying vec3 vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vN=normalMatrix*normal;vV=-mv.xyz;gl_Position=projectionMatrix*mv;}',
+    fragmentShader:'uniform vec3 uC;uniform vec2 uA;uniform float uP;varying vec3 vN;varying vec3 vV;void main(){float l=length(vN);float f=l<1e-5?0.5:pow(1.0-abs(dot(vN/l,normalize(vV))),uP);gl_FragColor=vec4(uC*(0.45+0.75*f),uA.x+uA.y*f);}'});
+}
+function syncBM(){
+  ['bone'].forEach(function(k){var c=BM[k];
+    if(c.on&&!c.mesh&&AXD){
+      var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(AXD[k].pos,3));g.setIndex(new THREE.BufferAttribute(AXD[k].idx,1));g.computeVertexNormals();
+      c.mesh=new THREE.Mesh(g,bmMat(c));c.mesh.renderOrder=2;scene.add(c.mesh);
+    }
+    if(c.mesh)c.mesh.visible=c.on;
+  });
+}
+['bone'].forEach(function(k){$(k).addEventListener('click',function(){
+  BM[k].on=!BM[k].on;this.setAttribute('aria-pressed',BM[k].on?'true':'false');loadAxial();syncBM();
+});});
 function loadAxial(){
   if(AXD||AX.loading)return;AX.loading=true;
   get('axial.b64.txt',true).then(function(buf){
@@ -1155,7 +1267,7 @@ function loadAxial(){
         ymin[i]=Math.min(pos[a0*3+1],pos[a1*3+1],pos[a2*3+1]);}
       out.push({pos:pos,idx:idx,ymin:ymin,H:H,nt:nt});
     }
-    AXD={bone:out[0],mus:out[1]};AX.dirty=true;
+    AXD={bone:out[0],mus:out[1]};AX.dirty=true;syncBM();
   }).catch(function(e){AX.loading=false;if(window.console)console.error(e);});
 }
 function sliceDetail(G,y,maxGap){
@@ -1233,7 +1345,20 @@ function drawAxial(t){
       ctx.strokeStyle=myo;ctx.lineWidth=Math.max(1.5,0.004*S);ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
       return;
     }
-    path(loops);ctx.fillStyle=win(g[0]+g[1]*e+g[2]*EQ*oc);ctx.fill('nonzero');});
+    var eB=k==='bladder'?e*0.08:e;
+    if(k==='kidR'||k==='kidL'){
+      /* rein : médullaire au centre, cortex en liseré d'environ 7 mm sous la capsule */
+      var eM=Math.max(0,Math.min(1,EV(kidMed,t)))*oc;
+      path(loops);ctx.fillStyle=win(g[0]+g[1]*eM+g[2]*EQ*oc);ctx.fill('nonzero');
+      ctx.save();ctx.clip('nonzero');ctx.strokeStyle=win(g[0]+g[1]*e+g[2]*EQ*oc);ctx.lineWidth=2*0.007*S;ctx.lineJoin='round';ctx.stroke();ctx.restore();
+      return;
+    }
+    path(loops);ctx.fillStyle=win(g[0]+g[1]*eB+g[2]*EQ*oc);ctx.fill('nonzero');
+    if(k==='bladder'&&e>0.01){
+      /* couche déclive : sous le niveau (vers l'arrière, en bas de l'image), l'urine opacifiée */
+      var yl=cy0-bladderLevel(e,t)*S;
+      ctx.save();path(loops);ctx.clip('nonzero');ctx.fillStyle=win(g[0]+g[1]*Math.min(1,e*1.25+0.15));ctx.fillRect(0,yl,W,W-yl);ctx.restore();
+    }});
   if(AX.bone){path(AX.bone);ctx.fillStyle=win(185);ctx.fill('evenodd');ctx.strokeStyle=win(900);ctx.lineWidth=Math.max(1,0.0016*S);ctx.stroke();}
   var D=AX.dots,C=AX.caps,e,r;
   ctx.lineCap='round';
@@ -1257,13 +1382,66 @@ function setAxial(v){
     var dm=new THREE.Mesh(new THREE.CircleGeometry(0.34,64),new THREE.MeshBasicMaterial({color:0x5fe0ff,transparent:true,opacity:0.10,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));
     dm.rotation.x=-Math.PI/2;AX.plane.add(dm);
     var rg=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.0014,6,90),new THREE.MeshBasicMaterial({color:0x8feaff,transparent:true,opacity:0.95,depthWrite:false,blending:THREE.AdditiveBlending}));
-    rg.rotation.x=Math.PI/2;AX.plane.add(rg);AX.plane.renderOrder=12;scene.add(AX.plane);
+    rg.rotation.x=Math.PI/2;AX.plane.add(rg);
+    /* poignée : l'anneau se saisit directement sur le patient */
+    var hd=new THREE.Mesh(new THREE.SphereGeometry(0.011,14,10),new THREE.MeshBasicMaterial({color:0xd8f8ff,transparent:true,opacity:0.95,depthTest:false}));
+    hd.position.set(0.34,0,0);AX.plane.add(hd);
+    AX.plane.renderOrder=12;scene.add(AX.plane);
   }
   AX.plane.visible=v;AX.plane.position.y=AX.y;AX.dirty=true;if(v)loadAxial();
+  layoutAx();
 }
 $('axB').addEventListener('click',function(){setAxial(!AX.on);setMenu(false);});
-$('axY').addEventListener('input',function(){AX.y=1.8-(+this.value);AX.dirty=true;if(AX.plane)AX.plane.position.y=AX.y;});
-$('axBig').addEventListener('click',function(){var b=!$('ax').classList.contains('big');$('ax').classList.toggle('big',b);this.setAttribute('aria-pressed',b?'true':'false');});
+/* Niveau de coupe ; en côte à côte la caméra accompagne l'anneau */
+function setAxY(y,follow){
+  y=Math.max(0.06,Math.min(1.74,y));var d=y-AX.y;AX.y=y;AX.dirty=true;if(AX.plane)AX.plane.position.y=y;
+  if(follow&&AX.split){CAM=null;camera.position.y+=d;controls.target.y+=d;}
+}
+$('axY').addEventListener('input',function(){setAxY(1.8-(+this.value),true);});
+$('axBig').addEventListener('click',function(){var b=!$('ax').classList.contains('big');$('ax').classList.toggle('big',b);this.setAttribute('aria-pressed',b?'true':'false');layoutAx();});
+/* Côte à côte : en format large, la coupe agrandie se range à gauche et le modèle passe à droite, à la même échelle
+   (même nombre de pixels par centimètre que la coupe), centré sur le niveau de coupe */
+/* même échelle que la coupe, sauf si l'anneau (72 cm avec sa marge) ne tient pas dans la moitié droite */
+function splitDist(){var h=stage.clientHeight,w=stage.clientWidth,wc=$('axC').clientWidth||h,k=2*Math.tan(camera.fov*Math.PI/360);return Math.max(h*0.56/(k*wc),h*0.72/(k*w/2));}
+function splitCam(ms){var D=splitDist();camTo(0,AX.y+0.22*D,0.9755*D,0,AX.y,0,ms);}
+function splitFollow(ms){var dy=AX.y-controls.target.y,c=camera.position,q=controls.target;camTo(c.x,c.y+dy,c.z,q.x,AX.y,q.z,ms);}
+function layoutAx(){
+  var el=$('ax'),w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
+  var sp=!!(AX.on&&el.classList.contains('big')&&w>=560&&w>=h*1.3);
+  el.classList.toggle('side',sp);stage.classList.toggle('split',sp);
+  $('axC').style.width=sp?Math.floor(Math.min(h,w/2))+'px':'';
+  if(sp){camera.setViewOffset(w,h,-w/4,0,w,h);}
+  else if(camera.view){camera.clearViewOffset();}
+  if(sp!==!!AX.split){AX.split=sp;setView();}
+}
+/* Anneau saisi sur le modèle : le pointeur est ramené à une hauteur sur l'axe du corps */
+var axDrag=null,axPl=new THREE.Plane(),axV=new THREE.Vector3(),axO=new THREE.Vector3(),axH=new THREE.Vector3();
+function axRayY(ev){
+  var r=cv.getBoundingClientRect();ndc.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  axV.set(camera.position.x-controls.target.x,0,camera.position.z-controls.target.z);if(axV.lengthSq()<1e-8)return null;
+  axPl.setFromNormalAndCoplanarPoint(axV.normalize(),axO);
+  return ray.ray.intersectPlane(axPl,axH)?axH.y:null;
+}
+function axNear(ev){
+  var r=cv.getBoundingClientRect(),x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(var a=0;a<8;a++){axV.set(0.34*Math.cos(a*0.7854),AX.y,0.34*Math.sin(a*0.7854)).project(camera);
+    var sx=r.left+(axV.x+1)/2*r.width,sy=r.top+(1-axV.y)/2*r.height;x0=Math.min(x0,sx);x1=Math.max(x1,sx);y0=Math.min(y0,sy);y1=Math.max(y1,sy);}
+  return ev.clientX>x0-14&&ev.clientX<x1+14&&ev.clientY>y0-18&&ev.clientY<y1+18;
+}
+stage.addEventListener('pointerdown',function(ev){
+  if(!AX.on||!AX.plane||ev.target!==cv||pickMode||axDrag||!axNear(ev))return;
+  var y=axRayY(ev);if(y==null)return;
+  ev.stopPropagation();axDrag={id:ev.pointerId,off:AX.y-y};CAM=null;setMenu(false);
+  try{stage.setPointerCapture(ev.pointerId);}catch(e){}
+},true);
+stage.addEventListener('pointermove',function(ev){
+  if(!axDrag||ev.pointerId!==axDrag.id)return;var y=axRayY(ev);if(y==null)return;
+  setAxY(y+axDrag.off,false);$('axY').value=1.8-AX.y;
+});
+function axEnd(ev){if(!axDrag||ev.pointerId!==axDrag.id)return;axDrag=null;if(AX.split)splitFollow(600);}
+stage.addEventListener('pointerup',axEnd);stage.addEventListener('pointercancel',axEnd);
+/* les contrôles d'orbite écoutent aussi les événements tactiles : on les retient pendant la saisie de l'anneau */
+['touchstart','touchmove'].forEach(function(n){stage.addEventListener(n,function(ev){if(axDrag){ev.stopPropagation();if(ev.cancelable)ev.preventDefault();}},{capture:true,passive:false});});
 
 /* ---------- Caillots ---------- */
 var APAR=null,CLOT=null,clotM=null,OCCO={};
