@@ -136,11 +136,28 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
 .panel.open .sheet{display:flex}
 .site{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .site label,.params label{font-family:var(--font-display);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.site label{flex:0 0 78px}
+.site label{flex:0 0 94px;min-width:0;white-space:nowrap}
 .site select{flex:1 1 130px;min-width:0}
+/* ligne Protocole : le sélecteur et l'interrupteur restent sur la même ligne, centrés */
+.site.pr{flex-wrap:nowrap}
+.site.pr select{flex:1 1 0}
+.site.acq:has(#goAcq[hidden]){display:none}
+/* Aller à l'acquisition : sous le menu Protocole (largeur du libellé + écart) */
+.site.acq,.site.under{padding-left:104px}
+
+/* interrupteur Tout afficher : coupe l'atténuation du protocole */
+.swb{display:flex;flex-direction:row;align-items:center;gap:7px;flex:none}
+.swb[hidden]{display:none}
+.swb .swl{font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);line-height:1}
+.sw{position:relative;flex:none;width:42px;height:24px;padding:0;border-radius:12px;border:1px solid var(--line);background:rgba(120,170,210,.12);cursor:pointer;transition:background .2s,border-color .2s}
+.sw .k{position:absolute;display:block;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#7f9bb3;transition:transform .2s,background .2s}
+.sw[aria-checked="true"]{background:rgba(95,224,255,.22);border-color:var(--cy)}
+.sw[aria-checked="true"] .k{transform:translateX(18px);background:var(--cy);box-shadow:0 0 8px var(--cy)}
+.sw:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 .params{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px}
-.params label{display:block;min-width:0}
-.params output{display:block;margin-top:2px;color:var(--fg);font-family:var(--font-mono);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.params>div{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+.params label{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.params output{display:block;margin-top:2px;white-space:nowrap;color:var(--fg);font-family:var(--font-mono);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
 .note{margin:0;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
 .app.full .panel>*:not(.row){display:none}
 .app.full .panel{padding-block:8px}
@@ -172,7 +189,8 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
   .readout{margin-top:8px}
   .ax{width:150px}
   .ax.big{width:min(calc(100% - 32px),calc(100vh - 96px))}
-  .site label{flex-basis:68px}
+  .site label{flex-basis:86px;letter-spacing:.1em}
+  .site.acq,.site.under{padding-left:96px}
   .app.full .panel{display:none}
 }
 @media (prefers-reduced-motion:reduce){button.b{transition:none}}
@@ -250,8 +268,10 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
       <button class="b" id="sheetB" type="button" aria-expanded="false" aria-controls="sheet">Réglages</button>
     </div>
     <div class="sheet" id="sheet">
-      <div class="site"><label for="site">Injection</label><select id="site"></select><button class="b" id="pickV" type="button" aria-pressed="false">Choisir la veine</button></div>
-      <div class="site"><label for="proto">Protocole</label><select id="proto"></select><button class="b" id="goAcq" type="button" hidden>Aller à l'acquisition</button></div>
+      <div class="site"><label for="site">Injection</label><select id="site"></select></div>
+      <div class="site under"><button class="b" id="pickV" type="button" aria-pressed="false">Choisir la veine</button></div>
+      <div class="site pr"><label for="proto">Protocole</label><select id="proto"></select><span class="swb" id="allRow" hidden><span class="swl" id="allL">Tout</span><button class="sw" id="allB" type="button" role="switch" aria-checked="false" aria-label="Tout afficher" title="Tout afficher"><span class="k"></span></button></span></div>
+      <div class="site acq"><button class="b" id="goAcq" type="button" hidden>Aller à l'acquisition</button></div>
       <div class="site" id="clotRow" hidden><label for="clot">Occlusion</label><select id="clot"></select></div>
       <div class="params">
         <div><label for="q">Débit<output id="qv">3,0 mL/s</output></label><input type="range" id="q" min="1" max="6" step="0.5" value="3"></div>
@@ -804,10 +824,17 @@ function setProto(i){
     for(k=0;k<n;k++){c=CURVES[k];flag[k]=(!PR||(PR.ves[c.k]&&!(PR.artOnly&&c.v)))?1:0;}
     var at=vesMesh.geometry.attributes.aT,arr=at.array;
     for(k=0;k<arr.length;k++)arr[k]=flag[VC[k]];
-    at.needsUpdate=true;vesMat.uniforms.uDim.value=PR?1:0;
+    at.needsUpdate=true;
   }
-  buildCurves();
+  syncAll();buildCurves();
 }
+/* Tout afficher : en protocole, le reste du corps n'est plus atténué ; le protocole garde ses temps et ses courbes */
+var SHOWALL=false;
+function syncAll(){
+  $('allRow').hidden=!PR;$('allB').setAttribute('aria-checked',SHOWALL?'true':'false');
+  if(vesMat)vesMat.uniforms.uDim.value=(PR&&!SHOWALL)?1:0;
+}
+$('allB').addEventListener('click',function(){SHOWALL=!SHOWALL;syncAll();});
 var css=getComputedStyle(document.documentElement);
 function tok(n){return css.getPropertyValue(n).trim();}
 var COL={grid:tok('--grid'),muted:tok('--muted'),fg:tok('--fg'),iode:tok('--iode'),cy:tok('--cy'),c:[tok('--vein'),tok('--art'),tok('--port')]};
@@ -884,7 +911,7 @@ function paint(t){
   if(vesMat)vesMat.uniforms.uT.value=t;
   for(var k=0;k<organs.length;k++){
     var og=organs[k],ev=clamp01(EV(og.fn,t))*(OCCO[og.key]!=null?OCCO[og.key]:1);
-    var dm=(PR&&!heart&&!PR.org[og.key])?0.4:1;
+    var dm=(PR&&!SHOWALL&&!heart&&!PR.org[og.key])?0.4:1;
     og.mat.uniforms.uE.value=ev;og.mat.uniforms.uDm.value=dm;
     if(og.key==='kidR'||og.key==='kidL'){og.mat.uniforms.uCM.value=1;og.mat.uniforms.uE2.value=clamp01(EV(kidMed,t))*(OCCO[og.key]!=null?OCCO[og.key]:1);}
     if(og.key==='bladder'){og.mat.uniforms.uLay.value=1;og.mat.uniforms.uLvl.value=bladderLevel(ev,t);}
